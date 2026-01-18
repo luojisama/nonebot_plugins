@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 赛程信息</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #141921;
+            --accent-color: #f7b500;
+            --text-main: #e1e1e1;
+            --text-dim: #8a8f98;
+            --ongoing: #5ffc7b;
+            --upcoming: #32a5fd;
+            --ended: #969696;
+            --win: #5ffc7b;
+            --loss: #ff4d4d;
+        }
+        body {
+            font-family: "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            width: 800px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), transparent);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .source {
+            font-size: 14px;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .match-group {
+            margin-bottom: 30px;
+        }
+        .match-date {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .date-tag {
+            color: var(--accent-color);
+            padding: 4px 10px;
+            background: rgba(247, 181, 0, 0.1);
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(247, 181, 0, 0.15);
+        }
+        .tournament-tag {
+            color: var(--text-main);
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-width: 500px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .match-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.03);
+            transition: all 0.3s ease;
+        }
+        .match-item:hover {
+            background: rgba(255,255,255,0.04);
+            transform: translateX(5px);
+        }
+        .match-time-info {
+            width: 80px;
+            flex-shrink: 0;
+            text-align: center;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            margin-right: 20px;
+        }
+        .match-time {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .match-format {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .match-teams {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 200px;
+        }
+        .team-left { justify-content: flex-end; text-align: right; }
+        .team-right { justify-content: flex-start; text-align: left; }
+        
+        .team-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        .team-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 160px;
+        }
+        .match-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 0;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 800;
+            width: 90px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--accent-color);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .score-divider { color: var(--text-dim); font-size: 16px; }
+        
+        .match-status-info {
+            width: 100px;
+            flex-shrink: 0;
+            text-align: right;
+            margin-left: 15px;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            padding-left: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .match-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .status-ongoing { background: rgba(95, 252, 123, 0.15); color: var(--ongoing); border: 1px solid rgba(95, 252, 123, 0.2); }
+        .status-upcoming { background: rgba(50, 165, 253, 0.15); color: var(--upcoming); border: 1px solid rgba(50, 165, 253, 0.2); }
+        .status-ended { background: rgba(150, 150, 150, 0.15); color: var(--ended); border: 1px solid rgba(150, 150, 150, 0.2); }
+        
+        .tournament-name {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+            font-weight: 500;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: 0.6;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 CS2 职业赛程预告</h1>
+            <span class="source">数据源: 5EPlay</span>
+        </div>
+        
+        {% set ns = namespace(current_date="", current_tournament="") %}
+        {% for match in matches %}
+            {% if match.date != ns.current_date or match.tournament != ns.current_tournament %}
+                {% if not loop.first %}
+                    </div> <!-- Close previous match-list -->
+                </div> <!-- Close previous match-group -->
+                {% endif %}
+                <div class="match-group">
+                    <div class="match-date">
+                        <span class="date-tag">{{ match.date }}</span>
+                        <span class="tournament-tag">{{ match.tournament }}</span>
+                    </div>
+                    <div class="match-list">
+                {% set ns.current_date = match.date %}
+                {% set ns.current_tournament = match.tournament %}
+            {% endif %}
+            
+            <div class="match-item">
+                <div class="match-time-info">
+                    <div class="match-time">{{ match.time }}</div>
+                    <div class="match-format">{{ match.format }}</div>
+                </div>
+                
+                <div class="match-teams">
+                    <div class="team team-left">
+                        <span class="team-name">{{ match.team1.name }}</span>
+                        <img src="{{ match.team1.logo }}" class="team-logo" onerror="this.src='https://static.5eplay.com/images/common/team_default.png'">
+                    </div>
+                    
+                    <div class="match-score">
+                        <span class="score">{{ match.score1 }}</span>
+                        <span class="score-divider">:</span>
+                        <span class="score">{{ match.score2 }}</span>
+                    </div>
+                    
+                    <div class="team team-right">
+                        <img src="{{ match.team2.logo }}" class="team-logo" onerror="this.src='https://static.5eplay.com/images/common/team_default.png'">
+                        <span class="team-name">{{ match.team2.name }}</span>
+                    </div>
+                </div>
+                
+                <div class="match-status-info">
+                    {% set clean_status = match.status.replace('赛前分析', '').strip() %}
+                    {% if clean_status %}
+                    <div class="match-status status-{{ 'ongoing' if '进行中' in match.status or '直播中' in match.status else ('ended' if '已结束' in match.status or '赛后' in match.status else 'upcoming') }}">
+                        {{ clean_status }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        {% if matches %}
+            </div> <!-- Close last match-list -->
+        </div> <!-- Close last match-group -->
+        {% endif %}
+        
+        <div class="footer">
+            Generated by ShiroBot • {{ now }}
+        </div>
+    </div>
+</body>
+</html>

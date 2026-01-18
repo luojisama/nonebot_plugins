@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfect World CS2 Stats</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #141921;
+            --text-main: #e1e1e1;
+            --text-dim: #8a8f98;
+            --accent-color: #3b82f6; /* PW Blue */
+            --accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4);
+            --win-color: #5ffc7b;
+            --loss-color: #ff4d4d;
+            --tie-color: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            width: 640px;
+            padding: 30px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .platform-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-gradient);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-container {
+            position: relative;
+            margin-right: 25px;
+        }
+
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-color);
+            padding: 3px;
+            background: var(--bg-color);
+            object-fit: cover;
+        }
+
+        .user-info h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: #fff;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info p::before {
+            content: "•";
+            color: var(--accent-color);
+        }
+
+        .rank-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .rank-item {
+            text-align: center;
+        }
+
+        .rank-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .rank-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .pvp-score {
+            color: #fbbf24; /* Gold */
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .hot-container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .hot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hot-block {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .hot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .hot-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .hot-meta {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .hot-bar-bg {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .hot-bar {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        .multi-kills {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .mk-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .mk-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .mk-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* Recent Matches Styles (Consistent with 5E) */
+        .recent-matches {
+            margin-top: 30px;
+        }
+
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .match-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid transparent;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .match-card.win { border-left: 4px solid var(--win-color); background: linear-gradient(90deg, rgba(95, 252, 123, 0.05), transparent); }
+        .match-card.loss { border-left: 4px solid var(--loss-color); background: linear-gradient(90deg, rgba(255, 77, 77, 0.05), transparent); }
+        .match-card.tie { border-left: 4px solid var(--tie-color); background: linear-gradient(90deg, rgba(160, 160, 160, 0.05), transparent); }
+
+        .match-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .res-tag {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .win .res-tag { background: rgba(95, 252, 123, 0.15); color: var(--win-color); }
+        .loss .res-tag { background: rgba(255, 77, 77, 0.15); color: var(--loss-color); }
+        .tie .res-tag { background: rgba(160, 160, 160, 0.15); color: var(--tie-color); }
+
+        .m-info { display: flex; flex-direction: column; }
+        .m-map { font-weight: 700; font-size: 14px; color: #fff; }
+        .m-score { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+        .m-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .m-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .m-val { font-weight: 700; font-size: 15px; color: var(--accent-color); }
+        .m-lab { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+
+        .timestamp {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="platform-badge">完美世界平台</div>
+        
+        <div class="header">
+            <div class="avatar-container">
+                <img src="{{ player.summary.avatarUrl or 'https://www.csgo.com.cn/images/header/logo.png' }}" class="avatar" alt="Avatar">
+            </div>
+            <div class="user-info">
+                <h1>{{ player.summary.nickname }}</h1>
+                <p>
+                    <span>ID: {{ player.summary.steamId }}</span>
+                    <span>•</span>
+                    <span>{{ player.stats.seasonId or '当前赛季' }}</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="rank-section">
+            <div class="rank-item">
+                <span class="rank-label">天梯排名</span>
+                <span class="rank-value">{{ '#' + player.stats.pvpRank|string if player.stats.pvpRank and player.stats.pvpRank > 0 else '---' }}</span>
+            </div>
+            <div class="rank-item">
+                <span class="rank-label">天梯分数</span>
+                <span class="rank-value pvp-score">{{ player.stats.pvpScore or '0' }}</span>
+            </div>
+            <div class="rank-item">
+                <span class="rank-label">胜率</span>
+                <span class="rank-value">{{ "%.1f" % (player.stats.winRate * 100) if player.stats.winRate and player.stats.winRate < 1 else (player.stats.winRate or '0.0') }}%</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Rating (综合评价)</span>
+                <span class="stat-value">{{ "%.2f" % ((player.stats.pwRating if player.stats.pwRating is not none else player.stats.rating) or 0) }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">ADR (场均伤害)</span>
+                <span class="stat-value">{{ "%.1f" % (player.stats.adr or 0) }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">RWS (胜场贡献)</span>
+                <span class="stat-value">{{ "%.2f" % (player.stats.rws or 0) }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">MVP (最有价值)</span>
+                <span class="stat-value">{{ player.stats.mvpCount or 0 }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">K/D (击杀/死亡)</span>
+                <span class="stat-value">{{ "%.2f" % (player.stats.kills / player.stats.deaths) if player.stats.deaths else '0.00' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">HS% (爆头率)</span>
+                <span class="stat-value">{{ "%.1f" % (player.stats.headShotRatio * 100) if player.stats.headShotRatio < 1 else (player.stats.headShotRatio or '0.0') }}%</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">比赛 (场次)</span>
+                <span class="stat-value">{{ player.stats.cnt or '0' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">残局 (胜场)</span>
+                <span class="stat-value">{{ (player.stats.vs1 or 0) + (player.stats.vs2 or 0) + (player.stats.vs3 or 0) }}</span>
+            </div>
+        </div>
+
+        <div class="hot-container">
+            <div class="hot-section">
+                <div class="section-title">常用地图</div>
+                <div class="hot-list">
+                    {% for map in player.stats.hotMaps[:4] %}
+                    {% set win_rate = (map.winCount / map.totalMatch * 100) if map.totalMatch and map.totalMatch > 0 else 0 %}
+                    <div class="hot-block">
+                        <div class="hot-item">
+                            <span class="hot-name">{{ map.mapName }}</span>
+                            <span class="hot-meta">{{ "%.1f" % win_rate }}% / {{ map.totalMatch }}场</span>
+                        </div>
+                        <div class="hot-bar-bg"><div class="hot-bar" style="width: {{ win_rate }}%"></div></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="hot-section">
+                <div class="section-title">常用武器</div>
+                <div class="hot-list">
+                    {% set weapons = (player.stats.hotWeapons or []) + (player.stats.hotWeapons2 or []) %}
+                    {% set ns = namespace(max_kills=1) %}
+                    {% for w in weapons %}
+                        {% set k = w.weaponKill or w.killNum or 0 %}
+                        {% if k > ns.max_kills %}{% set ns.max_kills = k %}{% endif %}
+                    {% endfor %}
+                    
+                    {% for weapon in weapons[:4] %}
+                    {% set kills = weapon.weaponKill or weapon.killNum or 0 %}
+                    <div class="hot-block">
+                        <div class="hot-item">
+                            <span class="hot-name">{{ (weapon.weaponName or weapon.nameZh or weapon.name) | upper }}</span>
+                            <span class="hot-meta">{{ kills }} 击杀</span>
+                        </div>
+                        <div class="hot-bar-bg"><div class="hot-bar" style="width: {{ (kills / ns.max_kills * 100) if ns.max_kills > 0 else 0 }}%"></div></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">多杀统计</div>
+        <div class="multi-kills">
+            <div class="mk-item">
+                <div class="mk-label">双杀 (2K)</div>
+                <div class="mk-value">{{ player.stats.k2 or 0 }}</div>
+            </div>
+            <div class="mk-item">
+                <div class="mk-label">三杀 (3K)</div>
+                <div class="mk-value">{{ player.stats.k3 or 0 }}</div>
+            </div>
+            <div class="mk-item">
+                <div class="mk-label">四杀 (4K)</div>
+                <div class="mk-value">{{ player.stats.k4 or 0 }}</div>
+            </div>
+            <div class="mk-item">
+                <div class="mk-label">五杀 (5K)</div>
+                <div class="mk-value">{{ player.stats.k5 or 0 }}</div>
+            </div>
+        </div>
+
+        {% if player.recent_matches %}
+        <div class="recent-matches">
+            <div class="section-title">最近 5 场比赛</div>
+            <div class="match-list">
+                {% for match in player.recent_matches %}
+                {% set is_win = (match.team == match.winTeam) %}
+                {% set is_tie = (match.score1 == match.score2) %}
+                {% set res_class = 'win' if is_win else ('tie' if is_tie else 'loss') %}
+                <div class="match-card {{ res_class }}">
+                    <div class="match-left">
+                        <div class="res-tag">
+                            {{ '胜' if is_win else ('平' if is_tie else '负') }}
+                        </div>
+                        <div class="m-info">
+                            <span class="m-map">{{ match.mapName }}</span>
+                            <span class="m-score">{{ match.score1 }} : {{ match.score2 }}</span>
+                        </div>
+                    </div>
+                    <div class="m-stats">
+                        <div class="m-stat">
+                            <span class="m-val">{{ "%.2f" % ((match.pwRating if match.pwRating is not none else match.rating) or 0) }}</span>
+                            <span class="m-lab">Rating</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-val">{{ match.kill or 0 }}/{{ match.death or 0 }}</span>
+                            <span class="m-lab">K/D</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-val">{{ "%.2f" % (match.we or 0) }}</span>
+                            <span class="m-lab">WE</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            CS2 战绩查询报告 • 由 ShiroBot 生成
+            <div class="timestamp">生成时间: {{ now }}</div>
+        </div>
+    </div>
+</body>
+</html>

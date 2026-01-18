@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --primary-color: #f082ac; /* 虹咲粉 */
+            --secondary-color: #ff9a00; /* Liella橘 */
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #666666;
+        }
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 460px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .schedule-list {
+            padding: 15px;
+        }
+        .event-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .event-title {
+            font-weight: bold;
+            color: var(--text-main);
+            font-size: 16px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .event-detail {
+            font-size: 13px;
+            color: var(--text-sub);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .footer {
+            padding: 15px;
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            border-top: 1px dashed #eee;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            background: #ffeef4;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LoveLive! 活动日程</h1>
+            <div class="subtitle">数据来源: ll-ch.com | 更新时间: {update_time}</div>
+        </div>
+        <div class="schedule-list">
+            {items_html}
+        </div>
+        <div class="footer">
+            页面由 ShiroBot 自动生成 | 祝您观演愉快 ♪
+        </div>
+    </div>
+</body>
+</html>

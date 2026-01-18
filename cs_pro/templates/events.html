@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #141921;
+            --accent-color: #f7b500;
+            --text-main: #e1e1e1;
+            --text-dim: #8a8f98;
+            --s-tier: #ff4d4d;
+            --a-tier: #f7b500;
+            --ongoing: #5ffc7b;
+            --upcoming: #32a5fd;
+            --ended: #969696;
+        }
+        body {
+            font-family: "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            width: 800px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--s-tier), var(--a-tier), transparent);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .source {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .event-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.03);
+            transition: all 0.3s ease;
+        }
+        .event-item:hover {
+            background: rgba(255,255,255,0.04);
+            transform: translateX(5px);
+        }
+        .tier-tag {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 22px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .tier-s { background: rgba(255, 77, 77, 0.15); color: var(--s-tier); border: 1px solid rgba(255, 77, 77, 0.3); }
+        .tier-a { background: rgba(247, 181, 0, 0.15); color: var(--a-tier); border: 1px solid rgba(247, 181, 0, 0.3); }
+        
+        .event-info {
+            flex-grow: 1;
+        }
+        .event-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .event-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .meta-item { display: flex; align-items: center; gap: 5px; }
+        
+        .status-tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-ongoing { background: rgba(95, 252, 123, 0.1); color: var(--ongoing); border: 1px solid rgba(95, 252, 123, 0.2); }
+        .status-upcoming { background: rgba(50, 165, 253, 0.1); color: var(--upcoming); border: 1px solid rgba(50, 165, 253, 0.2); }
+        .status-ended { background: rgba(160, 160, 160, 0.1); color: var(--ended); border: 1px solid rgba(160, 160, 160, 0.2); }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Major & Professional Events</h1>
+            <span class="source">Powered by 5EPlay Arena</span>
+        </div>
+        
+        <div class="event-list">
+            {% for event in events %}
+            {% set is_s = 'S' in event.level %}
+            <div class="event-item">
+                <div class="tier-tag {{ 'tier-s' if is_s else 'tier-a' }}">
+                    {{ 'S' if is_s else 'A' }}
+                </div>
+                <div class="event-info">
+                    <div class="event-title">{{ event.title }}</div>
+                    <div class="event-meta">
+                        <div class="meta-item">📅 {{ event.time or 'TBD' }}</div>
+                        <div class="meta-item">📍 {{ event.location or 'Online' }}</div>
+                        {% if event.prize %}
+                        <div class="meta-item">💰 {{ event.prize }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% set status_class = 'ongoing' if '进行中' in event.status else ('ended' if '已结束' in event.status else 'upcoming') %}
+                <div class="status-tag status-{{ status_class }}">
+                    {{ event.status }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="footer">
+            Generated by ShiroBot • Updated at {{ now }}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            font-family: 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 1100px;
+            width: 500px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #ffb6c1;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.3);
+            width: 440px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+
+        .card::before {
+            content: '🏪';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: #ff69b4;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .user-coins {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff5f8;
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: #d147a3;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-card {
+            background: white;
+            border: 1px solid #ffe4e1;
+            border-radius: 15px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .item-id {
+            background: #ffb6c1;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .item-name {
+            font-weight: bold;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .item-effect {
+            font-size: 13px;
+            color: #ff69b4;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .item-desc {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .item-price {
+            background: #fff0f5;
+            color: #d147a3;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-left: 10px;
+            border: 1px solid #ffb6c1;
+            white-space: nowrap;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #ccc;
+            border-top: 1px dashed #ffb6c1;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1 class="title">绪山百货</h1>
+        </div>
+
+        <div class="user-coins">
+            💰 当前持有金币: {coins}
+        </div>
+
+        <div class="items-list">
+            {items_html}
+        </div>
+
+        <div class="footer">
+            发送 “购买 [编号]” 即可换取心仪道具哦~
+        </div>
+    </div>
+</body>
+</html>

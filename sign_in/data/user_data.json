@@ -1,0 +1,1023 @@
+{
+    "2534316454": {
+        "favorability": 226.03,
+        "last_sign_in": "2026-01-13",
+        "action_points": 1,
+        "coins": 10,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 2,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "1714686386": {
+        "favorability": 1.29,
+        "last_sign_in": "2026-01-07",
+        "coins": 1,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1
+    },
+    "2430559713": {
+        "favorability": 19.03,
+        "last_sign_in": "2026-01-18",
+        "coins": 10,
+        "inventory": [],
+        "action_points": 0,
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 14,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2537363410": {
+        "favorability": 15.3,
+        "last_sign_in": "2026-01-17",
+        "coins": 52,
+        "inventory": [],
+        "action_points": 0,
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 9,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3448014519": {
+        "favorability": 21.71,
+        "last_sign_in": "2026-01-18",
+        "coins": 23,
+        "inventory": [
+            "补签卡"
+        ],
+        "blacklist_count": 2,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 17,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "1193157388": {
+        "favorability": 14.62,
+        "last_sign_in": "2026-01-18",
+        "coins": 64,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 9,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3293711343": {
+        "favorability": 3.24,
+        "last_sign_in": "2026-01-12",
+        "coins": 15,
+        "inventory": [],
+        "action_points": 1,
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-12",
+        "achievements": []
+    },
+    "259440496": {
+        "favorability": 4.05,
+        "last_sign_in": "2026-01-15",
+        "coins": 18,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 2,
+        "first_sign_in": "2026-01-09",
+        "achievements": []
+    },
+    "2769808552": {
+        "favorability": 8.75,
+        "last_sign_in": "2026-01-15",
+        "coins": 18,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 5,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "3529316631": {
+        "favorability": 25.46,
+        "last_sign_in": "2026-01-18",
+        "coins": 3,
+        "inventory": [],
+        "blacklist_count": 6,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 21,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3932591299": {
+        "favorability": 13.93,
+        "last_sign_in": "2026-01-18",
+        "coins": 61,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 8,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2028575852": {
+        "favorability": 2.43,
+        "last_sign_in": "2026-01-07",
+        "coins": 6,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2249405656": {
+        "favorability": 27.41,
+        "last_sign_in": "2026-01-18",
+        "coins": 0,
+        "inventory": [],
+        "action_points": 0,
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 21,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2372167538": {
+        "favorability": 3.49,
+        "last_sign_in": "2026-01-14",
+        "coins": 1,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-11",
+        "achievements": [],
+        "action_points": 0
+    },
+    "3129868101": {
+        "favorability": 5.49,
+        "last_sign_in": "2026-01-14",
+        "coins": 10,
+        "inventory": [],
+        "action_points": 0,
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-11",
+        "achievements": []
+    },
+    "1049036419": {
+        "favorability": 4.19,
+        "last_sign_in": "2026-01-18",
+        "coins": 10,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "3467871503": {
+        "favorability": 2.66,
+        "last_sign_in": "2026-01-18",
+        "coins": 17,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 5,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "2825318208": {
+        "favorability": 1.28,
+        "last_sign_in": "2026-01-08",
+        "coins": 2,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "3250548366": {
+        "favorability": 1.14,
+        "last_sign_in": "2026-01-05",
+        "coins": 0,
+        "inventory": [],
+        "action_points": 1,
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2715455357": {
+        "favorability": 2.23,
+        "last_sign_in": "2026-01-06",
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "1621991960": {
+        "favorability": 1.57,
+        "last_sign_in": "2026-01-06",
+        "coins": 3,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2711452923": {
+        "favorability": 7.57,
+        "last_sign_in": "2026-01-17",
+        "coins": 51,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 7,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2991883526": {
+        "favorability": 18.26,
+        "last_sign_in": "2026-01-18",
+        "coins": 43,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 12,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3576418782": {
+        "favorability": 4.43,
+        "last_sign_in": "2026-01-17",
+        "coins": 12,
+        "inventory": [],
+        "action_points": 0,
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "254481707": {
+        "favorability": 21.21,
+        "last_sign_in": "2026-01-18",
+        "coins": 15,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 10,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3397778036": {
+        "favorability": 1.54,
+        "last_sign_in": "2026-01-05",
+        "coins": 5,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "1371308976": {
+        "favorability": 7.28,
+        "last_sign_in": "2026-01-18",
+        "coins": 52,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 7,
+        "first_sign_in": "2026-01-12",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "982564911": {
+        "favorability": 8.16,
+        "last_sign_in": "2026-01-17",
+        "coins": 39,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 7,
+        "first_sign_in": "2026-01-13",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2039295332": {
+        "favorability": 0.2,
+        "last_sign_in": "2026-01-05",
+        "coins": 0,
+        "inventory": [],
+        "action_points": 1,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "1697170554": {
+        "favorability": 12.13,
+        "last_sign_in": "2026-01-18",
+        "coins": 74,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 9,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "1130328034": {
+        "favorability": 4.89,
+        "last_sign_in": "2026-01-09",
+        "coins": 12,
+        "inventory": [],
+        "blacklist_count": 10,
+        "is_perm_blacklisted": true,
+        "action_points": 0,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "975883615": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2172889759": {
+        "favorability": 13.02,
+        "last_sign_in": "2026-01-18",
+        "coins": 65,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 9,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2538819171": {
+        "favorability": 4.07,
+        "last_sign_in": "2026-01-12",
+        "coins": 17,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 2,
+        "first_sign_in": "2026-01-09",
+        "achievements": []
+    },
+    "2435212628": {
+        "favorability": 5.65,
+        "last_sign_in": "2026-01-12",
+        "coins": 13,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 1,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-09",
+        "achievements": []
+    },
+    "2430946566": {
+        "favorability": 15.65,
+        "last_sign_in": "2026-01-18",
+        "coins": 3,
+        "inventory": [],
+        "blacklist_count": 3,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 18,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "group_857992207": {
+        "favorability": 15.7,
+        "last_sign_in": "",
+        "daily_fav_count": 0.6,
+        "last_update": "2026-01-18"
+    },
+    "group_917540891": {
+        "favorability": 111.8,
+        "last_sign_in": "",
+        "daily_fav_count": 0.2,
+        "last_update": "2026-01-16"
+    },
+    "group_415442985": {
+        "favorability": 118.89,
+        "last_sign_in": "",
+        "daily_fav_count": 0.1,
+        "last_update": "2026-01-18"
+    },
+    "group_1121095286": {
+        "favorability": 57.6,
+        "last_sign_in": "",
+        "daily_fav_count": 0.4,
+        "last_update": "2026-01-18"
+    },
+    "2434735713": {
+        "favorability": 16.37,
+        "last_sign_in": "2026-01-18",
+        "coins": 45,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "action_points": 0,
+        "total_sign_ins": 11,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "3392275142": {
+        "favorability": 1.39,
+        "last_sign_in": "2026-01-05",
+        "action_points": 0,
+        "coins": 4,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "269378902": {
+        "favorability": 0.1,
+        "last_sign_in": "2026-01-05",
+        "action_points": 1,
+        "coins": 4,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "334097240": {
+        "favorability": 4.42,
+        "last_sign_in": "2026-01-17",
+        "action_points": 1,
+        "coins": 52,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 7,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "1250961636": {
+        "favorability": 6.04,
+        "last_sign_in": "2026-01-17",
+        "action_points": 0,
+        "coins": 7,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 4,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "1552967911": {
+        "favorability": 1.28,
+        "last_sign_in": "2026-01-15",
+        "action_points": 1,
+        "coins": 1,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-15",
+        "achievements": []
+    },
+    "2157899018": {
+        "favorability": 1.55,
+        "last_sign_in": "2026-01-09",
+        "action_points": 1,
+        "coins": 4,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2078063452": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2324910654": {
+        "favorability": 0.56,
+        "last_sign_in": "2026-01-05",
+        "action_points": 1,
+        "coins": 5,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "1971148700": {
+        "favorability": 4.52,
+        "last_sign_in": "2026-01-18",
+        "action_points": 1,
+        "coins": 58,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 7,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "group_127498080": {
+        "favorability": 103.0,
+        "daily_fav_count": 0.1,
+        "last_update": "2026-01-17"
+    },
+    "3295780897": {
+        "favorability": 0.68,
+        "last_sign_in": "2026-01-05",
+        "action_points": 0,
+        "coins": 1,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "1057030094": {
+        "favorability": 1.07,
+        "last_sign_in": "2026-01-09",
+        "action_points": 1,
+        "coins": 6,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-09",
+        "achievements": []
+    },
+    "group_943068420": {
+        "favorability": 8.0,
+        "daily_fav_count": 0.2,
+        "last_update": "2026-01-18"
+    },
+    "2241475067": {
+        "favorability": 3.07,
+        "last_sign_in": "2026-01-18",
+        "action_points": 1,
+        "coins": 6,
+        "inventory": [],
+        "blacklist_count": 2,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 3,
+        "first_sign_in": "2026-01-16",
+        "achievements": []
+    },
+    "group_1055760950": {
+        "favorability": 100.4,
+        "daily_fav_count": 0.1,
+        "last_update": "2026-01-17"
+    },
+    "2284685042": {
+        "favorability": 1.91,
+        "last_sign_in": "2026-01-12",
+        "action_points": 0,
+        "coins": 4,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-12",
+        "achievements": []
+    },
+    "3405639199": {
+        "favorability": 17.64,
+        "last_sign_in": "2026-01-18",
+        "action_points": 0,
+        "coins": 38,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 14,
+        "first_sign_in": "2026-01-09",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2758407028": {
+        "favorability": 0.3,
+        "last_sign_in": "2026-01-06",
+        "action_points": 0,
+        "coins": 5,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "group_743213254": {
+        "favorability": 101.1,
+        "daily_fav_count": 0.5,
+        "last_update": "2026-01-13"
+    },
+    "2470760026": {
+        "favorability": 3.57,
+        "last_sign_in": "2026-01-10",
+        "action_points": 0,
+        "coins": 9,
+        "inventory": [],
+        "blacklist_count": 7,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-10",
+        "achievements": []
+    },
+    "3807114604": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false
+    },
+    "2544728320": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 2,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "3622463651": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "1729124944": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 2,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "3069428189": {
+        "favorability": 11.46,
+        "last_sign_in": "2026-01-18",
+        "action_points": 0,
+        "coins": 66,
+        "inventory": [],
+        "blacklist_count": 3,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 9,
+        "first_sign_in": "2026-01-10",
+        "achievements": [
+            "beginner"
+        ]
+    },
+    "2814815297": {
+        "favorability": 0.58,
+        "last_sign_in": "2026-01-07",
+        "action_points": 1,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2048897873": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false
+    },
+    "1371366499": {
+        "favorability": 0.17,
+        "last_sign_in": "2026-01-09",
+        "action_points": 1,
+        "coins": 4,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 1,
+        "first_sign_in": "2026-01-09",
+        "achievements": []
+    },
+    "1979839114": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": true,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2517860981": {
+        "favorability": 4.13,
+        "last_sign_in": "2026-01-18",
+        "action_points": 0,
+        "coins": 11,
+        "inventory": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 4,
+        "first_sign_in": "2026-01-13",
+        "achievements": []
+    },
+    "2112367878": {
+        "favorability": 0.0,
+        "last_sign_in": "",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "blacklist_count": 1,
+        "is_perm_blacklisted": false,
+        "total_sign_ins": 0,
+        "first_sign_in": "",
+        "achievements": []
+    },
+    "2904649700": {
+        "favorability": 0.58,
+        "last_sign_in": "2026-01-09",
+        "first_sign_in": "2026-01-09",
+        "action_points": 0,
+        "coins": 0,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "3919848457": {
+        "favorability": 11.94,
+        "last_sign_in": "2026-01-14",
+        "first_sign_in": "2026-01-10",
+        "action_points": 0,
+        "coins": 4,
+        "inventory": [],
+        "total_sign_ins": 13,
+        "achievements": [
+            "beginner"
+        ],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "3988303766": {
+        "favorability": 2.98,
+        "last_sign_in": "2026-01-18",
+        "first_sign_in": "2026-01-10",
+        "action_points": 1,
+        "coins": 7,
+        "inventory": [],
+        "total_sign_ins": 3,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "1595755172": {
+        "favorability": 2.24,
+        "last_sign_in": "2026-01-11",
+        "first_sign_in": "2026-01-10",
+        "action_points": 0,
+        "coins": 5,
+        "inventory": [],
+        "total_sign_ins": 2,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "1115429258": {
+        "favorability": 0.79,
+        "last_sign_in": "2026-01-11",
+        "first_sign_in": "2026-01-11",
+        "action_points": 1,
+        "coins": 5,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "2847514715": {
+        "favorability": 1.61,
+        "last_sign_in": "2026-01-14",
+        "first_sign_in": "2026-01-11",
+        "action_points": 0,
+        "coins": 6,
+        "inventory": [],
+        "total_sign_ins": 2,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "2629998547": {
+        "favorability": 1.29,
+        "last_sign_in": "2026-01-13",
+        "first_sign_in": "2026-01-11",
+        "action_points": 1,
+        "coins": 5,
+        "inventory": [],
+        "total_sign_ins": 2,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "2134780025": {
+        "favorability": 2.17,
+        "last_sign_in": "2026-01-15",
+        "first_sign_in": "2026-01-12",
+        "action_points": 0,
+        "coins": 8,
+        "inventory": [],
+        "total_sign_ins": 2,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "3686323811": {
+        "favorability": 0.47,
+        "last_sign_in": "2026-01-13",
+        "first_sign_in": "2026-01-13",
+        "action_points": 1,
+        "coins": 2,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "3674212728": {
+        "favorability": 4.1,
+        "last_sign_in": "2026-01-18",
+        "first_sign_in": "2026-01-15",
+        "action_points": 0,
+        "coins": 12,
+        "inventory": [],
+        "total_sign_ins": 4,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "1915726725": {
+        "favorability": 1.12,
+        "last_sign_in": "2026-01-16",
+        "first_sign_in": "2026-01-16",
+        "action_points": 0,
+        "coins": 4,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "group_908089595": {
+        "favorability": 100.7,
+        "daily_fav_count": 0.7,
+        "last_update": "2026-01-17"
+    },
+    "2908481497": {
+        "favorability": 2.3,
+        "last_sign_in": "2026-01-18",
+        "first_sign_in": "2026-01-17",
+        "action_points": 0,
+        "coins": 5,
+        "inventory": [],
+        "total_sign_ins": 2,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "group_625345155": {
+        "favorability": 101.0,
+        "daily_fav_count": 1.0,
+        "last_update": "2026-01-17"
+    },
+    "2634263203": {
+        "favorability": 1.04,
+        "last_sign_in": "2026-01-17",
+        "first_sign_in": "2026-01-17",
+        "action_points": 0,
+        "coins": 3,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    },
+    "3410654296": {
+        "favorability": 1.67,
+        "last_sign_in": "2026-01-18",
+        "first_sign_in": "2026-01-18",
+        "action_points": 0,
+        "coins": 4,
+        "inventory": [],
+        "total_sign_ins": 1,
+        "achievements": [],
+        "blacklist_count": 0,
+        "is_perm_blacklisted": false
+    }
+}

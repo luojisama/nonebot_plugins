@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            font-family: 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 800px;
+            width: 500px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #ffb6c1; /* 浅粉红边框 */
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.3);
+            width: 440px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+
+        .card::before {
+            content: '🌸';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        .card::after {
+            content: '✨';
+            position: absolute;
+            bottom: -10px;
+            left: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            color: #ff69b4; /* 热粉红 */
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            background: #fff5f8;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 1px solid #ffe4e1;
+            transition: transform 0.2s;
+        }
+
+        .rank-item:nth-child(1) {
+            background: linear-gradient(135deg, #fff5f8 0%, #fff0f5 100%);
+            border: 2px solid #ffd700;
+        }
+
+        .rank-item:nth-child(2) {
+            border: 2px solid #c0c0c0;
+        }
+
+        .rank-item:nth-child(3) {
+            border: 2px solid #cd7f32;
+        }
+
+        .rank-num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff69b4;
+            width: 40px;
+            text-align: center;
+            margin-right: 10px;
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        .rank-item:nth-child(1) .rank-num { color: #ffd700; font-size: 32px; }
+        .rank-item:nth-child(2) .rank-num { color: #c0c0c0; font-size: 28px; }
+        .rank-item:nth-child(3) .rank-num { color: #cd7f32; font-size: 26px; }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ffb6c1;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 16px;
+            color: #d147a3;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-detail {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .fav-info {
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .fav-value {
+            font-size: 18px;
+            color: #ff69b4;
+            font-weight: bold;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff69b4, #ffb6c1);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .footer-time {
+            text-align: center;
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1 class="title">好感度排行榜</h1>
+        </div>
+        
+        <div class="rank-list">
+            {rank_items}
+        </div>
+
+        <div class="footer-time">
+            更新时间: {update_time}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --steam-bg: #1b2838;
+            --steam-card: #2a475e;
+            --steam-blue: #66c0f4;
+            --steam-text: #c7d5e0;
+            --steam-white: #ffffff;
+            --steam-green: #90ba3c;
+            --steam-grey: #acb2b8;
+        }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: var(--steam-bg);
+            color: var(--steam-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-banner {
+            width: 100%;
+            max-width: 900px;
+            background: var(--steam-card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            border: 2px solid var(--steam-blue);
+            margin-right: 20px;
+        }
+        .user-info {
+            flex-grow: 1;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--steam-white);
+            margin-bottom: 5px;
+        }
+        .user-status {
+            font-size: 16px;
+            color: var(--steam-blue);
+        }
+        .content-title {
+            width: 100%;
+            max-width: 900px;
+            font-size: 20px;
+            color: var(--steam-white);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--steam-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .game-count {
+            font-size: 14px;
+            color: var(--steam-blue);
+        }
+
+        /* 状态模式特定样式 */
+        .status-detail {
+            width: 100%;
+            max-width: 900px;
+            background: var(--steam-card);
+            border-radius: 8px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .status-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 5px;
+            border: 3px solid var(--steam-blue);
+            margin-right: 25px;
+        }
+        .status-info .name {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--steam-white);
+            margin-bottom: 10px;
+        }
+        .status-info .status-text {
+            font-size: 18px;
+            color: var(--steam-blue);
+            margin-bottom: 8px;
+        }
+        .status-info .playing-text {
+            font-size: 16px;
+            color: var(--steam-green);
+            font-weight: bold;
+        }
+
+        /* 最近游戏模式特定样式 */
+        .recent-list {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .recent-card {
+            background: var(--steam-card);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .recent-image {
+            width: 180px;
+            height: 85px;
+            object-fit: cover;
+        }
+        .recent-info {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .recent-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--steam-white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .recent-time {
+            font-size: 14px;
+            color: var(--steam-blue);
+            margin-top: 5px;
+        }
+
+        /* 游戏库模式特定样式 */
+        .library-list {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .library-item {
+            background: var(--steam-card);
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            border-left: 4px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .library-item:hover {
+            border-left-color: var(--steam-blue);
+            background: #325a7a;
+        }
+        .library-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+        .library-details {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .library-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--steam-white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .library-time {
+            font-size: 12px;
+            color: var(--steam-grey);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    {% if mode != 'status' %}
+    <div class="header-banner">
+        <img class="avatar" src="{{ user.avatar.full }}" alt="">
+        <div class="user-info">
+            <div class="user-name">{{ user.persona_name }}</div>
+            <div class="user-status">{{ user.persona_state_desc }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if mode == 'status' %}
+        <div class="status-detail">
+            <img class="status-avatar" src="{{ user.avatar.full }}" alt="">
+            <div class="status-info">
+                <div class="name">{{ user.persona_name }}</div>
+                {% if user.game_info %}
+                    <div class="playing-text">正在玩: {{ user.game_info.game_name or user.game_info.name or "未知游戏" }}</div>
+                {% else %}
+                    <div class="status-text">{{ user.persona_state_desc }}</div>
+                    {% if user.online_status_desc %}
+                        <div style="color: var(--steam-grey); font-size: 14px;">{{ user.online_status_desc }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    {% elif mode == 'recent' %}
+        <div class="content-title">
+            <span>最近玩过的游戏</span>
+        </div>
+        <div class="recent-list">
+            {% for game in games %}
+            <div class="recent-card">
+                <img class="recent-image" src="{{ game.image.header }}" alt="">
+                <div class="recent-info">
+                    <div class="recent-name">{{ game.name }}</div>
+                    <div class="recent-time">最近：{{ game.playtime.recent_desc }}</div>
+                    <div class="recent-time">总计：{{ game.playtime.total_desc }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% elif mode == 'games' %}
+        {% if ai_review %}
+        <div class="ai-review-section" style="width: 100%; max-width: 900px; background: rgba(102, 192, 244, 0.1); border-left: 4px solid var(--steam-blue); padding: 20px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); box-sizing: border-box;">
+            <div style="font-weight: bold; color: var(--steam-blue); margin-bottom: 12px; display: flex; align-items: center; font-size: 18px;">
+                <span style="margin-right: 10px;">🤖 AI 锐评</span>
+                <div style="flex-grow: 1; height: 1px; background: rgba(102, 192, 244, 0.2);"></div>
+            </div>
+            <div style="line-height: 1.7; font-style: italic; color: var(--steam-white); font-size: 15px; letter-spacing: 0.5px; white-space: pre-wrap;">"{{ ai_review }}"</div>
+        </div>
+        {% endif %}
+        <div class="content-title">
+            <span>所有游戏</span>
+            <span class="game-count">共 {{ games|length }} 款游戏</span>
+        </div>
+        <div class="library-list">
+            {% for game in games %}
+            <div class="library-item">
+                <img class="library-icon" src="{{ game.image.icon }}" alt="">
+                <div class="library-details">
+                    <div class="library-name">{{ game.name }}</div>
+                    <div class="library-time">总时长：{{ game.playtime.total_desc }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</body>
+</html>

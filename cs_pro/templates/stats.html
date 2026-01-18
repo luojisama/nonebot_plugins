@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #141921;
+            --accent-color: #f74d4d; /* 5E Red */
+            --accent-gradient: linear-gradient(135deg, #f74d4d, #f78c00);
+            --text-main: #e1e1e1;
+            --text-dim: #8a8f98;
+            --rank-color: #5ffc7b;
+            --win-color: #5ffc7b;
+            --loss-color: #ff4d4d;
+            --tie-color: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            width: 640px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+        .platform-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-gradient);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(247, 77, 77, 0.3);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .avatar-container {
+            position: relative;
+            margin-right: 25px;
+        }
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-color);
+            padding: 3px;
+            background: var(--bg-color);
+            object-fit: cover;
+        }
+        .user-info h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .user-info p {
+            margin: 5px 0 0;
+            color: var(--text-dim);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info p::before {
+            content: "•";
+            color: var(--accent-color);
+        }
+        .elo-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        .elo-item {
+            text-align: center;
+        }
+        .elo-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .elo-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--rank-color);
+            text-shadow: 0 0 20px rgba(95, 252, 123, 0.3);
+        }
+        
+        /* Role Positioning Card */
+        .role-card {
+            background: linear-gradient(135deg, rgba(247, 77, 77, 0.15), rgba(247, 140, 0, 0.1));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(247, 77, 77, 0.2);
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .role-card::after {
+            content: "ROLE";
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 60px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.03);
+            font-style: italic;
+        }
+        .role-icon {
+            width: 60px;
+            height: 60px;
+            margin-right: 20px;
+            filter: drop-shadow(0 0 10px rgba(247, 77, 77, 0.5));
+        }
+        .role-main {
+            flex: 1;
+            z-index: 1;
+        }
+        .role-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .role-desc {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            max-width: 300px;
+        }
+        .role-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .role-tag {
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .role-extra {
+            text-align: right;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 20px;
+            z-index: 1;
+        }
+        .extra-item {
+            margin-bottom: 5px;
+        }
+        .extra-label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        .extra-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+        .stat-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .recent-matches {
+            margin-top: 30px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .match-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid transparent;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .match-card.win { border-left: 4px solid var(--win-color); background: linear-gradient(90deg, rgba(95, 252, 123, 0.05), transparent); }
+        .match-card.loss { border-left: 4px solid var(--loss-color); background: linear-gradient(90deg, rgba(255, 77, 77, 0.05), transparent); }
+        .match-card.tie { border-left: 4px solid var(--tie-color); background: linear-gradient(90deg, rgba(160, 160, 160, 0.05), transparent); }
+
+        .match-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .res-tag {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+        }
+        .win .res-tag { background: rgba(95, 252, 123, 0.15); color: var(--win-color); }
+        .loss .res-tag { background: rgba(255, 77, 77, 0.15); color: var(--loss-color); }
+        .tie .res-tag { background: rgba(160, 160, 160, 0.15); color: var(--tie-color); }
+
+        .m-info { display: flex; flex-direction: column; }
+        .m-map { font-weight: 700; font-size: 14px; color: #fff; }
+        .m-score { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+        .m-stats {
+            display: flex;
+            gap: 20px;
+        }
+        .m-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .m-val { font-weight: 700; font-size: 15px; color: var(--accent-color); }
+        .m-lab { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+        .timestamp {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="platform-badge">5E 对战平台</div>
+
+        <div class="header">
+            <div class="avatar-container">
+                <img class="avatar" src="{{ avatar or 'https://oss-arena.5eplay.com/images/default_avatar.png' }}" alt="Avatar">
+            </div>
+            <div class="user-info">
+                <h1>{{ nickname }}</h1>
+                <p>
+                    <span>5E Arena 玩家战绩</span>
+                    {% if stats.career.match_time %}
+                    <span>•</span>
+                    <span>总时长: {{ stats.career.match_time }}h</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="elo-card">
+            <div class="elo-item">
+                <span class="elo-label">当前 ELO</span>
+                <span class="elo-value">{{ stats.career.elo_9 or '---' }}</span>
+            </div>
+            <div class="elo-item">
+                <span class="elo-label">胜率</span>
+                <span class="elo-value" style="color: #fff; text-shadow: none;">{{ "%.1f" % (stats.career.win_total / stats.career.match_total * 100) if stats.career.match_total else '0.0' }}%</span>
+            </div>
+        </div>
+
+        {% if stats.role and stats.role.role_name %}
+        <div class="role-card">
+            <img class="role-icon" src="{{ stats.role.role_icon }}" alt="Role Icon" onerror="this.style.display='none'">
+            <div class="role-main">
+                <div class="role-name">
+                    {{ stats.role.role_name }}
+                </div>
+                <div class="role-desc">{{ stats.role.role_desc }}</div>
+                <div class="role-tags">
+                    {% for tag in stats.role.role_tags %}
+                    <span class="role-tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="role-extra">
+                <div class="extra-item">
+                    <span class="extra-label">选手模板</span>
+                    <span class="extra-value">{{ stats.role.player_template_name or '---' }}</span>
+                </div>
+                <div class="extra-item">
+                    <span class="extra-label">评分/级别</span>
+                    <span class="extra-value">{{ stats.role.score_level or '' }} {{ stats.role.score or '' }}</span>
+                </div>
+                <div class="extra-item">
+                    <span class="extra-label">稀有度</span>
+                    <span class="extra-value">{{ stats.role.rarity or '---' }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Rating (综合评价)</span>
+                <span class="stat-value">{{ stats.career.rating or '0.00' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">ADR (场均伤害)</span>
+                <span class="stat-value">{{ stats.career.adr or stats.best_season.adr or '0.0' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">RWS (胜场贡献)</span>
+                <span class="stat-value">{{ stats.career.rws or '0.00' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">KPR (场均击杀)</span>
+                <span class="stat-value">{{ stats.career.kpr or '0.00' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">胜场 / 总场次</span>
+                <span class="stat-value">{{ stats.career.win_total or '0' }} / {{ stats.career.match_total or '0' }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">爆头率 (HS%)</span>
+                <span class="stat-value">{{ "%.1f" % (stats.career.headshot_total / stats.career.kill_total * 100) if stats.career.kill_total else '0.0' }}%</span>
+            </div>
+        </div>
+
+        {% if stats.recent_matches %}
+        <div class="recent-matches">
+            <div class="section-title">最近 5 场比赛</div>
+            <div class="match-list">
+                {% for match in stats.recent_matches %}
+                {% set res_class = 'win' if match.is_win else ('tie' if match.is_tie else 'loss') %}
+                <div class="match-card {{ res_class }}">
+                    <div class="match-left">
+                        <div class="res-tag">
+                            {{ '胜' if match.is_win else ('平' if match.is_tie else '负') }}
+                        </div>
+                        <div class="m-info">
+                            <span class="m-map">{{ match.map_name }}</span>
+                            <span class="m-score">{{ match.score }}</span>
+                        </div>
+                    </div>
+                    <div class="m-stats">
+                        <div class="m-stat">
+                            <span class="m-val">{{ match.rating }}</span>
+                            <span class="m-lab">Rating</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-val">{{ match.kill }}/{{ match.death }}</span>
+                            <span class="m-lab">K/D</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-val">{{ match.adr or '0.0' }}</span>
+                            <span class="m-lab">ADR</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+             CS2 战绩查询报告 • 由 ShiroBot 生成
+             <div class="timestamp">生成时间: {{ now }}</div>
+        </div>
+    </div>
+</body>
+</html>

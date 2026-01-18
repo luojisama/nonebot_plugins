@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 职业选手详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --bg-card: #1a1d2e;
+            --accent-color: #f7b500;
+            --text-main: #ffffff;
+            --text-dim: #a0a7b4;
+            --success: #00c853;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            width: 800px;
+            padding: 40px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header Section */
+        .player-header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #252a41 100%);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-header::after {
+            content: '';
+            position: absolute;
+            right: -50px;
+            top: -50px;
+            width: 200px;
+            height: 200px;
+            background: var(--accent-color);
+            filter: blur(100px);
+            opacity: 0.1;
+        }
+
+        .player-portrait {
+            width: 180px;
+            height: 180px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .player-info {
+            flex-grow: 1;
+        }
+
+        .player-name-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .player-name {
+            font-size: 36px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .team-tag {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .team-logo {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .player-meta {
+            display: flex;
+            gap: 20px;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .meta-item b {
+            color: var(--text-main);
+            margin-right: 5px;
+        }
+
+        .rating-badge {
+            background: var(--accent-color);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Grid Layout for Settings & Peripherals */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-color);
+        }
+
+        /* Settings Style */
+        .settings-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .setting-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .setting-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .setting-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Peripherals Style */
+        .peri-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .peri-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .peri-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: grayscale(0.5) brightness(1.2);
+        }
+
+        .peri-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .peri-type {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .peri-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Honors Style */
+        .honor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .honor-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(247, 181, 0, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .honor-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .honor-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
+        }
+
+        .honor-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.4;
+        }
+
+        .honor-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-tag {
+            background: rgba(247, 181, 0, 0.15);
+            color: var(--accent-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .honor-date {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        .hltv-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="player-header">
+            <img src="{{ player.logo or 'https://static.5eplay.com/images/common/player_default.png' }}" class="player-portrait" onerror="this.src='https://static.5eplay.com/images/common/player_default.png'">
+            <div class="player-info">
+                <div class="player-name-row">
+                    <h1 class="player-name">{{ player.name }}</h1>
+                    <div class="team-tag">
+                        <img src="{{ player.team.logo }}" class="team-logo" onerror="this.style.display='none'">
+                        <span>{{ player.team.name }}</span>
+                    </div>
+                </div>
+                <div class="player-meta">
+                    <div class="meta-item"><b>年龄</b> {{ player.age or '未知' }}</div>
+                    <div class="meta-item"><b>HLTV Rating</b> <span class="rating-badge">{{ player.rating or 'N/A' }}</span></div>
+                    <div class="meta-item"><b>排名</b> #{{ player.rank or 'TBD' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <!-- Game Settings -->
+            <div class="card">
+                <div class="card-title">⚙️ 游戏设置</div>
+                <div class="settings-list">
+                    {% if player.mouse and player.mouse.params_formatted %}
+                        {% for p in player.mouse.params_formatted %}
+                        <div class="setting-item">
+                            <span class="setting-label">{{ p.name }}</span>
+                            <span class="setting-value">{{ p.value }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="setting-item" style="grid-column: span 2;">
+                            <span class="setting-label">暂无设置信息</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Peripherals -->
+            <div class="card">
+                <div class="card-title">🖱️ 选手外设</div>
+                <div class="peri-list">
+                    {% if player.prosets %}
+                        {% for item in player.prosets %}
+                        <div class="peri-item">
+                            <img src="{{ item.logo }}" class="peri-icon" onerror="this.src='https://static.5eplay.com/images/common/device_default.png'">
+                            <div class="peri-info">
+                                <span class="peri-type">{{ item.type_desc }}</span>
+                                <span class="peri-name">{{ item.name }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="peri-item">
+                            <span class="peri-name">暂无外设信息</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Honors & Events -->
+        <div class="grid-container">
+            <!-- Recent Honors -->
+            <div class="card">
+                <div class="card-title">🏆 最近荣誉</div>
+                <div class="honor-list">
+                    {% if player.honor_list %}
+                        {% for honor in player.honor_list[:5] %}
+                        <div class="honor-item">
+                            <img src="{{ honor.logo }}" class="honor-logo" onerror="this.src='https://static.5eplay.com/images/common/honor_default.png'">
+                            <div class="honor-info">
+                                <span class="honor-name">{{ honor.name }}</span>
+                                <div class="honor-meta">
+                                    {% if honor.rank %}
+                                    <span class="rank-tag">TOP {{ honor.rank }}</span>
+                                    {% endif %}
+                                    <span class="honor-date">{{ honor.date }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="honor-item">
+                            <span class="honor-name">暂无荣誉记录</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="card">
+                <div class="card-title">📅 参加赛事</div>
+                <div class="honor-list">
+                    {% if player.event_list %}
+                        {% for event in player.event_list[:5] %}
+                        <div class="honor-item" style="border-left-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.02);">
+                            <img src="{{ event.logo }}" class="honor-logo" onerror="this.src='https://static.5eplay.com/images/common/event_default.png'">
+                            <div class="honor-info">
+                                <span class="honor-name">{{ event.name }}</span>
+                                <span class="honor-date">{{ event.date }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="honor-item">
+                            <span class="honor-name">暂无参赛记录</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span>数据更新于 {{ now }}</span>
+            {% if hltv_link %}
+            <span class="hltv-link">HLTV: {{ hltv_link }}</span>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
