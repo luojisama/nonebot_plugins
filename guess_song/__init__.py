@@ -100,13 +100,14 @@ async def ncm_search(keyword: str, limit: int = 5) -> List[Dict[str, Any]]:
     return []
 
 async def ncm_get_lyrics(song_id: int, full: bool = False) -> Optional[str]:
-    url = f"https://api.viki.moe/ncm/song/{song_id}/lyric"
+    # url = f"https://api.viki.moe/ncm/song/{song_id}/lyric"
+    url = f"https://music.163.com/api/song/lyric?os=pc&id={song_id}&lv=-1"
     async with httpx.AsyncClient(timeout=10, headers=get_headers()) as client:
         try:
             resp = await client.get(url)
             if resp.status_code == 200:
                 data = resp.json()
-                lrc = data.get("lyric", "")
+                lrc = data.get("lrc", {}).get("lyric", "")
                 if lrc:
                     # 过滤时间标签
                     lines = re.sub(r"\[.*?\]", "", lrc).split("\n")
