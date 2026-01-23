@@ -40,6 +40,17 @@ class EarthquakeSource:
         except Exception as e:
             logger.error(f"保存最后地震ID失败: {e}")
 
+    def is_domestic(self, location: str) -> bool:
+        """判断是否为国内地震"""
+        keywords = [
+            "北京", "天津", "河北", "山西", "内蒙古", "辽宁", "吉林", "黑龙江",
+            "上海", "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南",
+            "湖北", "湖南", "广东", "广西", "海南", "重庆", "四川", "贵州",
+            "云南", "西藏", "陕西", "甘肃", "青海", "宁夏", "新疆", "台湾",
+            "香港", "澳门", "中国", "东海", "南海", "黄海", "渤海"
+        ]
+        return any(k in location for k in keywords)
+
     async def fetch_latest(self) -> List[EarthquakeInfo]:
         """获取最新的地震信息 (解析 HTML)"""
         async with httpx.AsyncClient(timeout=10, headers=self.headers) as client:
@@ -88,7 +99,7 @@ class EarthquakeSource:
         return []
 
     async def get_new_earthquakes(self) -> List[EarthquakeInfo]:
-        """获取未推送过的新地震"""
+        """获取未推送过的新地震 (仅筛选国内)"""
         latest_list = await self.fetch_latest()
         if not latest_list:
             return []
@@ -106,14 +117,18 @@ class EarthquakeSource:
             new_earthquakes.append(eq)
 
         if new_earthquakes:
+            # 更新最新ID为列表第一个（即最新的那个），无论是否推送，都必须更新游标
             self.last_earthquake_id = latest_list[0].id
             self._save_last_id(self.last_earthquake_id)
 
-        return new_earthquakes
+        # 筛选国内地震进行推送
+        domestic_earthquakes = [eq for eq in new_earthquakes if self.is_domestic(eq.location)]
+        return domestic_earthquakes
 
     async def get_history(self, count: int = 5) -> List[EarthquakeInfo]:
-        """获取历史地震信息"""
+        """获取历史地震信息 (仅筛选国内)"""
         latest_list = await self.fetch_latest()
-        return latest_list[:count]
+        domestic_list = [eq for eq in latest_list if self.is_domestic(eq.location)]
+        return domestic_list[:count]
 
 earthquake_source = EarthquakeSource()

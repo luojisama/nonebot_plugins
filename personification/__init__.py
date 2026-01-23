@@ -6,8 +6,10 @@ import asyncio
 import httpx
 import aiofiles
 import base64
+from io import BytesIO
 from typing import Dict, List, Optional
 from pathlib import Path
+from PIL import Image
 from nonebot import on_message, on_command, get_plugin_config, logger, get_driver, require, get_bots
 from nonebot.typing import T_State
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment, MessageEvent, PokeNotifyEvent, Event
@@ -617,6 +619,14 @@ async def handle_reply(bot: Bot, event: Event, state: T_State):
         for seg in event.message:
             if seg.type == "text":
                 message_text += seg.data.get("text", "")
+            elif seg.type == "face":
+                # QQ默认表情
+                face_id = seg.data.get("id", "")
+                message_text += f"[表情id:{face_id}]"
+            elif seg.type == "mface":
+                # 市场表情
+                summary = seg.data.get("summary", "表情包")
+                message_text += f"[{summary}]"
             elif seg.type == "image":
                 url = seg.data.get("url")
                 file_name = seg.data.get("file", "").lower()
@@ -627,18 +637,36 @@ async def handle_reply(bot: Bot, event: Event, state: T_State):
                             resp = await client.get(url, timeout=10)
                             if resp.status_code == 200:
                                 mime_type = resp.headers.get("Content-Type", "image/jpeg")
+                                # 如果是 GIF，转换为文字描述，因为部分视觉模型不支持动图
                                 if "image/gif" in mime_type or file_name.endswith(".gif"):
-                                    logger.info("拟人插件：检测到 GIF 图片，AI 暂不支持，已跳过图片处理")
+                                    message_text += "[发送了一个动态表情包]"
+                                    logger.info("拟人插件：检测到 GIF 图片，已转换为文本描述")
                                     continue
+                                
+                                # 尝试识别图片类型（表情包 vs 照片）
+                                try:
+                                    img_obj = Image.open(BytesIO(resp.content))
+                                    w, h = img_obj.size
+                                    # 判定标准：尺寸较小通常为表情包，放宽至 1280 以兼容高清梗图
+                                    if w <= 1280 and h <= 1280:
+                                        message_text += "[发送了一个表情包]"
+                                    else:
+                                        message_text += "[发送了一张图片]"
+                                except Exception as e:
+                                     logger.warning(f"识别图片尺寸失败: {e}")
+                                     message_text += "[发送了一张图片]"
+
                                 base64_data = base64.b64encode(resp.content).decode("utf-8")
                                 image_urls.append(f"data:{mime_type};base64,{base64_data}")
                             else:
                                 # 如果下载失败，且不是 GIF，保留原 URL 作为备选
                                 if not file_name.endswith(".gif"):
+                                    message_text += "[发送了一张图片]"
                                     image_urls.append(url)
                     except Exception as e:
                         logger.warning(f"下载图片失败，保留原 URL: {e}")
                         if not file_name.endswith(".gif"):
+                            message_text += "[发送了一张图片]"
                             image_urls.append(url)
         
         message_content = message_text.strip()
@@ -769,7 +797,9 @@ async def handle_reply(bot: Bot, event: Event, state: T_State):
         f"3. **互动反馈**：\n"
         f"   - 若氛围极好或对方让你开心，末尾加 [氛围好]。\n"
         f"   - 仅在对方发送严重违规/恶意攻击时，输出 [NO_REPLY] 以拉黑对方。\n"
-        f"4. **视觉感知**：结合对方发送的图片内容进行符合人设的评价。\n"
+        f"4. **视觉感知**：\n"
+        f"   - 若用户发送内容标记为 **[发送了一个表情包]**，请将其视为**梗图/表情包**。这通常是幽默、夸张或流行文化引用，**严禁**将其解读为真实发生的严重事件（如受伤、灾难）。请以轻松、调侃、配合玩梗或“看来你很喜欢这个表情”的态度回复。\n"
+        f"   - 若标记为 **[发送了一张图片]**，则正常结合图片内容进行符合人设的评价。\n"
     )
 
     # 获取表情包列表（如果启用了）

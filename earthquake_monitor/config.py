@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 class Config(BaseModel):
-    earthquake_monitor_interval: int = 60  # 地震监测间隔，单位秒
+    earthquake_monitor_interval: int = 20  # 地震监测间隔，单位秒 (加快至 20秒)
     typhoon_monitor_interval: int = 600   # 台风监测间隔，单位秒 (台风更新较慢，10分钟一次即可)
     earthquake_monitor_whitelist_path: str = "data/earthquake_monitor/whitelist.json"
     typhoon_monitor_whitelist_path: str = "data/earthquake_monitor/typhoon_whitelist.json"
