@@ -1,6 +1,6 @@
-# NoneBot2 插件合集使用文档
+# NoneBot2 插件合集
 
-本项目是一个功能丰富的 NoneBot2 插件合集，涵盖了系统管理、社交互动、游戏战绩、AI 分析及日常工具等多个领域。
+本项目是我个人通过拷打ai+社区现有插件完成的，感谢ChatGPT，Gemini，Claude与广大nonebot，astrbot插件开发者。   
 
 ---
 
