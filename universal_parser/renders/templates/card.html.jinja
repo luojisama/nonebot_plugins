@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        :root {
+            --primary-pink: #ff69b4;
+            --light-pink: #ffb6c1;
+            --bg-pink: #fff5f8;
+            --text-dark: #333;
+            --text-gray: #666;
+            --accent-purple: #d147a3;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: transparent;
+            font-family: 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 600px; /* Adjust width as needed */
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.98);
+            border: 3px solid var(--light-pink);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card::before {
+            content: '🌸';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .card::after {
+            content: '✨';
+            position: absolute;
+            bottom: -10px;
+            left: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+            background: var(--bg-pink);
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--light-pink);
+            background-color: #fff;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .username {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-purple);
+        }
+
+        .time {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 2px;
+        }
+
+        .platform-logo {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            height: 24px;
+            width: auto;
+            opacity: 0.8;
+        }
+
+        /* Content Body */
+        .content-body {
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-pink);
+            line-height: 1.4;
+        }
+
+        .text {
+            font-size: 16px;
+            color: var(--text-dark);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Images */
+        .image-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--light-pink);
+        }
+
+        .single-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-grid {
+            display: grid;
+            gap: 6px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .image-grid.cols-1 { grid-template-columns: 1fr; }
+        .image-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .image-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        .grid-item {
+            position: relative;
+            padding-bottom: 100%;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        .grid-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .more-count {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 182, 193, 0.8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Repost */
+        .card.repost {
+            background-color: #fffafc;
+            box-shadow: none;
+            border: 1px dashed var(--light-pink);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 5px;
+        }
+
+        .card.repost::before, .card.repost::after {
+            display: none;
+        }
+
+        /* Graphics Content */
+        .graphics-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        .graphics-alt {
+            font-size: 12px;
+            color: var(--text-gray);
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 5px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--light-pink);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-gray);
+            z-index: 1;
+        }
+
+        .extra-info {
+            background: var(--bg-pink);
+            padding: 4px 12px;
+            border-radius: 15px;
+            color: var(--accent-purple);
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    {% macro render_card(result, is_repost=False) %}
+    <div class="card {% if is_repost %}repost{% endif %}">
+        {# Header #}
+        {% if result.author %}
+        <div class="header">
+            {% if result.author.avatar_path %}
+            <img src="{{ result.author.avatar_path }}" class="avatar" alt="avatar" />
+            {% endif %}
+            <div class="user-info">
+                <div class="username">{{ result.author.name }}</div>
+                {% if result.formartted_datetime %}
+                <div class="time">{{ result.formartted_datetime }}</div>
+                {% endif %}
+            </div>
+            
+            {# Platform Logo #}
+            {% if not is_repost and result.platform and result.platform.logo_path %}
+            <img src="{{ result.platform.logo_path }}" class="platform-logo" alt="{{ result.platform.display_name }}">
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="content-body">
+            {# Title #}
+            {% if result.title %}
+            <div class="title">{{ result.title }}</div>
+            {% endif %}
+            
+            {# Text #}
+            {% if result.text %}
+            <div class="text">{{ result.text }}</div>
+            {% endif %}
+            
+            {# Images / Cover #}
+            {% if result.cover_path %}
+            <div class="image-container">
+                <img src="{{ result.cover_path }}" class="single-image" alt="cover" />
+            </div>
+            {% elif result.img_contents %}
+                {% set imgs = result.img_contents %}
+                {% set count = imgs|length %}
+                {% if count == 1 %}
+                <div class="image-container">
+                    <img src="{{ imgs[0].path }}" class="single-image" alt="image" />
+                </div>
+                {% else %}
+                    {% set cols = 3 %}
+                    {% if count == 2 or count == 4 %}
+                        {% set cols = 2 %}
+                    {% endif %}
+                    <div class="image-grid cols-{{ cols }}">
+                        {% for img in imgs[:9] %}
+                        <div class="grid-item">
+                            <img src="{{ img.path }}" alt="image" />
+                            {% if loop.last and count > 9 %}
+                            <div class="more-count">+{{ count - 9 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endif %}
+            
+            {# Graphics #}
+            {% if result.graphics_contents %}
+                {% for graphics in result.graphics_contents %}
+                <div class="graphics-item">
+                    {% if graphics.text %}
+                    <div class="text">{{ graphics.text }}</div>
+                    {% endif %}
+                    <div class="image-container">
+                        <img src="{{ graphics.path }}" class="single-image" alt="graphics" />
+                    </div>
+                    {% if graphics.alt %}
+                    <div class="graphics-alt">{{ graphics.alt }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            {# Repost #}
+            {% if result.repost %}
+                {{ render_card(result.repost, is_repost=True) }}
+            {% endif %}
+        </div>
+
+        {# Footer / Extra #}
+        {% if not is_repost %}
+        <div class="footer">
+            {% if result.extra_info %}
+            <div class="extra-info">{{ result.extra_info }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endmacro %}
+    
+    {{ render_card(result) }}
+</body>
+</html>

@@ -5,6 +5,169 @@ from typing import List, Dict, Optional
 
 DATA_PATH = Path("data/personification/whitelist.json")
 REQUESTS_PATH = Path("data/personification/requests.json")
+GROUP_CONFIG_PATH = Path("data/personification/group_config.json")
+
+# --- 群聊消息记录 (持久化版) ---
+# 存储结构: JSON文件 {group_id: {"style": str, "messages": [{nickname, content, time, is_bot}, ...]}}
+CHAT_HISTORY_PATH = Path("data/personification/chat_history.json")
+
+def load_chat_history() -> Dict[str, dict]:
+    """加载聊天记录"""
+    if not CHAT_HISTORY_PATH.exists():
+        return {}
+    try:
+        content = CHAT_HISTORY_PATH.read_text(encoding="utf-8").strip()
+        if not content:
+            return {}
+        return json.loads(content)
+    except Exception as e:
+        print(f"Error loading chat history: {e}") # 使用 print 临时调试，因为这里可能没有 logger
+        return {}
+
+def save_chat_history(data: Dict[str, dict]):
+    """保存聊天记录"""
+    try:
+        CHAT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # 使用临时文件写入，避免写入中断导致文件损坏
+        temp_path = CHAT_HISTORY_PATH.with_suffix(".tmp")
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        
+        # 原子性重命名 (Windows下可能需要先删除目标文件，pathlib.replace在Py3.8+ Windows上支持覆盖)
+        if temp_path.exists():
+            temp_path.replace(CHAT_HISTORY_PATH)
+            
+    except Exception as e:
+        print(f"Error saving chat history: {e}")
+
+def record_group_msg(group_id: str, nickname: str, content: str, is_bot: bool = False) -> int:
+    """
+    记录群聊消息
+    返回当前记录的总数
+    """
+    # 过滤空消息
+    if not content.strip():
+        return 0
+        
+    try:
+        data = load_chat_history()
+        if group_id not in data:
+            data[group_id] = {"style": "", "messages": []}
+        
+        # 确保 messages 字段存在 (兼容旧数据)
+        if "messages" not in data[group_id]:
+            data[group_id]["messages"] = []
+            
+        data[group_id]["messages"].append({
+            "nickname": nickname,
+            "content": content,
+            "time": int(time.time()),
+            "is_bot": is_bot
+        })
+        
+        # 限制每群保留最近 200 条
+        count = len(data[group_id]["messages"])
+        if count > 200:
+            data[group_id]["messages"] = data[group_id]["messages"][-200:]
+            count = 200
+            
+        save_chat_history(data)
+        return count
+    except Exception as e:
+        print(f"Error recording group msg: {e}")
+        return 0
+
+def clear_group_msgs(group_id: str):
+    """清空指定群聊的历史记录"""
+    data = load_chat_history()
+    if group_id in data:
+        data[group_id]["messages"] = []
+        save_chat_history(data)
+
+def get_recent_group_msgs(group_id: str, limit: int = 200) -> List[Dict]:
+    """获取最近群聊消息"""
+    data = load_chat_history()
+    if group_id not in data or "messages" not in data[group_id]:
+        return []
+    return data[group_id]["messages"][-limit:]
+
+def set_group_style(group_id: str, style: str):
+    """设置群聊风格 (存入 chat_history.json)"""
+    data = load_chat_history()
+    if group_id not in data:
+        data[group_id] = {"style": "", "messages": []}
+        
+    data[group_id]["style"] = style
+    save_chat_history(data)
+
+def get_group_style(group_id: str) -> str:
+    """获取群聊风格"""
+    data = load_chat_history()
+    return data.get(group_id, {}).get("style", "")
+
+# --- 群聊配置管理 ---
+
+def load_group_configs() -> Dict[str, dict]:
+    """加载所有群组配置"""
+    if not GROUP_CONFIG_PATH.exists():
+        return {}
+    try:
+        with open(GROUP_CONFIG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_group_configs(data: Dict[str, dict]):
+    GROUP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(GROUP_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def get_group_config(group_id: str) -> dict:
+    configs = load_group_configs()
+    return configs.get(group_id, {})
+
+def set_group_prompt(group_id: str, prompt: Optional[str]):
+    configs = load_group_configs()
+    if group_id not in configs:
+        configs[group_id] = {}
+    
+    if prompt is None:
+        # 重置
+        if "custom_prompt" in configs[group_id]:
+            del configs[group_id]["custom_prompt"]
+    else:
+        configs[group_id]["custom_prompt"] = prompt
+        
+    save_group_configs(configs)
+
+def set_group_sticker_enabled(group_id: str, enabled: bool):
+    configs = load_group_configs()
+    if group_id not in configs:
+        configs[group_id] = {}
+        
+    configs[group_id]["sticker_enabled"] = enabled
+    save_group_configs(configs)
+
+def set_group_enabled(group_id: str, enabled: bool):
+    configs = load_group_configs()
+    if group_id not in configs:
+        configs[group_id] = {}
+        
+    configs[group_id]["enabled"] = enabled
+    save_group_configs(configs)
+
+def set_group_schedule_enabled(group_id: str, enabled: bool):
+    configs = load_group_configs()
+    if group_id not in configs:
+        configs[group_id] = {}
+        
+    configs[group_id]["schedule_enabled"] = enabled
+    save_group_configs(configs)
+
+# 旧的 set_group_style / get_group_style 已迁移至 chat_history.json 管理
+# 保留这两个函数名是为了兼容接口，但实际操作 chat_history.json
+# 上面的新实现已经覆盖了这两个函数，所以这里只需要删除旧的实现即可
+# (由于 SearchReplace 替换了上面的部分，这里不需要重复删除，只需确保不重复定义)
 
 # --- 白名单管理 ---
 
@@ -39,6 +202,12 @@ def remove_group_from_whitelist(group_id: str) -> bool:
     return True
 
 def is_group_whitelisted(group_id: str, config_whitelist: list) -> bool:
+    # 0. 优先检查群组独立开关配置
+    group_config = get_group_config(group_id)
+    if "enabled" in group_config:
+        return group_config["enabled"]
+
+    # 1. 检查白名单
     if group_id in config_whitelist:
         return True
     return group_id in load_whitelist()

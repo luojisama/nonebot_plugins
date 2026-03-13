@@ -9,5 +9,5 @@ class Config(BaseModel):
     user_persona_model: str = "gpt-4o-mini"
     
     # 消息记录配置
-    user_persona_history_max: int = 70  # 满 70 条自动生成
+    user_persona_history_max: int = 100  # 满 70 条自动生成
     user_persona_data_path: str = "data/user_persona/data.json"

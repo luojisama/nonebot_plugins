@@ -1,6 +1,7 @@
 import json
 import os
 import httpx
+from datetime import datetime
 from pathlib import Path
 from .config import Config
 
@@ -61,7 +62,15 @@ def get_user_data(user_id: str) -> dict:
         "total_sign_ins": 0,
         "achievements": [],
         "blacklist_count": 0,
-        "is_perm_blacklisted": False
+        "is_perm_blacklisted": False,
+        "nickname": "",
+        "last_work_time": "",
+        "remaining_works": 1,
+        "custom_title": "",     # 自定义头衔
+        "bank_coins": 0,        # 银行存款
+        "last_rob_time": 0,     # 上次抢劫时间 (timestamp)
+        "bank_history": [],      # 银行流水明细
+        "wallet_history": []     # 钱包流水明细 (所有涉及 coins 的变动)
     }
     if user_id.startswith("group_"):
         default = {"favorability": 100.0, "daily_fav_count": 0.0, "last_update": ""}
@@ -69,34 +78,22 @@ def get_user_data(user_id: str) -> dict:
     # 兼容旧数据，补齐缺失字段
     if user_id in data and not user_id.startswith("group_"):
         changed = False
-        if "coins" not in data[user_id]:
-            data[user_id]["coins"] = 0
-            changed = True
-        if "inventory" not in data[user_id]:
-            data[user_id]["inventory"] = []
-            changed = True
-        if "total_sign_ins" not in data[user_id]:
-            data[user_id]["total_sign_ins"] = 0
-            changed = True
-        if "first_sign_in" not in data[user_id]:
-            data[user_id]["first_sign_in"] = ""
-            changed = True
-        if "achievements" not in data[user_id]:
-            data[user_id]["achievements"] = []
-            changed = True
-        if "blacklist_count" not in data[user_id]:
-            data[user_id]["blacklist_count"] = 0
-            changed = True
-        if "is_perm_blacklisted" not in data[user_id]:
-            data[user_id]["is_perm_blacklisted"] = False
-            changed = True
+        # 批量检查并设置默认值
+        for key, value in default.items():
+            if key not in data[user_id]:
+                data[user_id][key] = value
+                changed = True
+        
         if changed:
             save_data(data)
             
     return data.get(user_id, default)
 
-def update_user_data(user_id: str, favorability: float = None, last_sign_in: str = None, first_sign_in: str = None, daily_fav_count: float = None, last_update: str = None, action_points: int = None, coins: int = None, inventory: list = None, total_sign_ins: int = None, achievements: list = None, blacklist_count: int = None, is_perm_blacklisted: bool = None):
-    """更新单个用户或群聊的数据"""
+def update_user_data(user_id: str, reason: str = None, **kwargs):
+    """
+    更新单个用户或群聊的数据
+    reason: 资金变动原因，如果提供了该参数且 coins 发生变动，将自动记录到 wallet_history
+    """
     data = load_data()
     if user_id not in data:
         default = {
@@ -109,35 +106,47 @@ def update_user_data(user_id: str, favorability: float = None, last_sign_in: str
             "total_sign_ins": 0,
             "achievements": [],
             "blacklist_count": 0,
-            "is_perm_blacklisted": False
+            "is_perm_blacklisted": False,
+            "nickname": "",
+            "last_work_time": "",
+            "remaining_works": 1,
+            "bank_coins": 0,
+            "custom_title": "",
+            "last_rob_time": 0,
+            "fortune": {},            # 运势
+            "duel_stats": {"win": 0, "loss": 0}, # 决斗数据
+            "lottery": {"tickets": 0, "last_buy_date": ""}, # 彩票数据
+            "achievement_progress": {"red_packet_total": 0, "steal_success": 0, "consecutive_fails": 0}, # 成就进度
+            "bank_history": [],       # 银行流水明细
+            "wallet_history": []      # 钱包流水明细
         }
         if user_id.startswith("group_"):
             default = {"favorability": 100.0, "daily_fav_count": 0.0, "last_update": ""}
         data[user_id] = default
     
-    if favorability is not None:
-        data[user_id]["favorability"] = favorability
-    if last_sign_in is not None:
-        data[user_id]["last_sign_in"] = last_sign_in
-    if first_sign_in is not None:
-        data[user_id]["first_sign_in"] = first_sign_in
-    if daily_fav_count is not None:
-        data[user_id]["daily_fav_count"] = daily_fav_count
-    if last_update is not None:
-        data[user_id]["last_update"] = last_update
-    if action_points is not None:
-        data[user_id]["action_points"] = action_points
-    if coins is not None:
-        data[user_id]["coins"] = coins
-    if inventory is not None:
-        data[user_id]["inventory"] = inventory
-    if total_sign_ins is not None:
-        data[user_id]["total_sign_ins"] = total_sign_ins
-    if achievements is not None:
-        data[user_id]["achievements"] = achievements
-    if blacklist_count is not None:
-        data[user_id]["blacklist_count"] = blacklist_count
-    if is_perm_blacklisted is not None:
-        data[user_id]["is_perm_blacklisted"] = is_perm_blacklisted
+    # 检查是否需要记录钱包流水
+    if reason and "coins" in kwargs and not user_id.startswith("group_"):
+        old_coins = data[user_id].get("coins", 0)
+        new_coins = kwargs["coins"]
+        diff = new_coins - old_coins
+        
+        if diff != 0:
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            history = data[user_id].get("wallet_history", [])
+            history.append({
+                "time": now_str,
+                "type": reason,
+                "amount": diff,
+                "balance": new_coins
+            })
+            # 保留最近 50 条
+            if len(history) > 50:
+                history = history[-50:]
+            data[user_id]["wallet_history"] = history
+
+    # 更新数据
+    for key, value in kwargs.items():
+        if value is not None:
+            data[user_id][key] = value
         
     save_data(data)

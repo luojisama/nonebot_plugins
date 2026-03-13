@@ -6,32 +6,111 @@ import nonebot
 import json
 import subprocess
 import time
+import re
 from datetime import datetime
 from typing import Optional
-from nonebot import on_command, get_driver, logger, get_plugin, get_loaded_plugins
-from nonebot.exception import FinishedException
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment, MessageEvent, PrivateMessageEvent, GroupMessageEvent
+from pydantic import BaseModel
+from nonebot import on_command, on_notice, on_request, get_driver, logger, get_plugin, get_loaded_plugins, require, get_plugin_config
+from nonebot.message import run_preprocessor
+from nonebot.matcher import Matcher
+from nonebot.exception import FinishedException, IgnoredException
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    Message,
+    MessageSegment,
+    MessageEvent,
+    PrivateMessageEvent,
+    GroupMessageEvent,
+    GroupIncreaseNoticeEvent,
+    GroupDecreaseNoticeEvent,
+    FriendRequestEvent,
+    GroupRequestEvent,
+    ActionFailed
+)
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
 from nonebot.plugin import PluginMetadata
+
+require("nonebot_plugin_apscheduler")
+from nonebot_plugin_apscheduler import scheduler
+
+class Config(BaseModel):
+    qzone_cookie: Optional[str] = None
 
 try:
     from nonebot_plugin_htmlrender import md_to_pic
 except ImportError:
     md_to_pic = None
 
+# --- 全局变量 ---
+plugin_config = get_plugin_config(Config)
+_FRIEND_COUNT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "friend_count.json")
+_today_friend_count = 0
+_pending_group_requests = {} # {flag: event}
+
+def _load_friend_count():
+    global _today_friend_count
+    if os.path.exists(_FRIEND_COUNT_FILE):
+        try:
+            with open(_FRIEND_COUNT_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                _today_friend_count = data.get("count", 0)
+        except Exception:
+            _today_friend_count = 0
+
+def _save_friend_count():
+    try:
+        os.makedirs(os.path.dirname(_FRIEND_COUNT_FILE), exist_ok=True)
+        with open(_FRIEND_COUNT_FILE, "w", encoding="utf-8") as f:
+            json.dump({"count": _today_friend_count, "date": datetime.now().strftime("%Y-%m-%d")}, f)
+    except Exception as e:
+        logger.error(f"保存好友统计失败: {e}")
+
+# 初始化加载
+_load_friend_count()
+
+
 __plugin_meta__ = PluginMetadata(
     name="Bot管理",
-    description="管理Bot上下线提醒、重启关闭、插件管理及商店功能",
+    description="Bot综合管理：上下线提醒、重启关闭、插件管理、账号设置、群发消息、空间说说及群务监控",
     usage="""
-    重启: 重启Bot
-    关闭: 关闭Bot
-    插件列表: 查看已加载插件
-    商店查询 [关键词]: 查询插件商店
-    安装插件 [插件名]: 安装插件
-    更新插件 [插件名]: 更新插件
-    """,
+【基础管理 (超管)】
+重启: 重启Bot进程
+关闭: 彻底关闭Bot
+告诉管理员 [内容]: 向所有超管发送私聊消息
+修改昵称 [新昵称]: 修改Bot昵称
+修改头像 [图片/URL]: 修改Bot头像
+
+【账号与消息 (超管)】
+发布群消息 [群号] [内容]: 指定群发送消息
+发布说说 [内容]: 发送QQ空间说说
+更新空间Cookie: 获取/更新说说权限
+申请列表: 查看未处理的加群/邀请申请
+同意申请 [编号]: 同意加群/邀请
+拒绝申请 [编号]: 拒绝加群/邀请
+
+【插件管理 (超管)】
+插件列表: 查看已加载插件及其详情
+插件帮助 [名称/序号]: 查看插件详细说明
+商店查询 [关键词]: 在NoneBot插件商店搜索
+安装插件 [包名]: 使用pip安装新插件
+更新插件 [包名]: 使用pip更新插件包
+
+【群务管理 (管理/超管)】
+禁言 [@目标/QQ] [时长]: 禁言成员 (支持 10m/2h 等格式)
+解禁 [@目标/QQ]: 解除成员禁言
+踢出 [@目标/QQ]: 将成员移出群聊
+确认/取消: 对敏感管理操作进行二次确认
+本群禁用 [插件名]: 在当前群禁用指定插件
+本群启用 [插件名]: 在当前群启用指定插件
+本群禁用列表: 查看当前群禁用的插件
+
+【自动化功能】
+上下线提醒: Bot连接/断开时私聊提醒超管
+群变动监控: 绪山真寻风格的入群欢迎与退群告别
+好友/入群申请: 自动同意好友，入群申请需管理员审核
+    """.strip(),
 )
 
 driver = get_driver()
@@ -589,3 +668,547 @@ async def _(args: Message = CommandArg()):
             await update_plugin.finish(f"更新失败：\n{stderr}")
     except Exception as e:
         await update_plugin.finish(f"执行更新出错: {e}")
+
+# --- 群聊人员变动监控 ---
+group_increase = on_notice(priority=5)
+@group_increase.handle()
+async def _(bot: Bot, event: GroupIncreaseNoticeEvent):
+    user_id = event.user_id
+    group_id = event.group_id
+    
+    # 别当欧尼酱主题：真寻风格的欢迎
+    welcome_msgs = [
+        f"诶？又有新成员加入了吗？(・◇・)\n欢迎 [CQ:at,qq={user_id}] 来到本群！我是绪山真寻，请多指教！",
+        f"喔！是新面孔呢！[CQ:at,qq={user_id}]，欢迎加入！！",
+        f"（惊）有人进来了！[CQ:at,qq={user_id}] 欢迎！在这里要好好相处哦，不然美波里会生气的！"
+    ]
+    import random
+    msg = random.choice(welcome_msgs)
+    await bot.send_group_msg(group_id=group_id, message=msg)
+
+group_decrease = on_notice(priority=5)
+@group_decrease.handle()
+async def _(bot: Bot, event: GroupDecreaseNoticeEvent):
+    user_id = event.user_id
+    group_id = event.group_id
+    
+    # 别当欧尼酱主题：真寻风格的告别
+    farewell_msgs = [
+        f"呜... [CQ:at,qq={user_id}] 离开了群聊呢。是因为我太不可靠了吗？(Ｔ▽Ｔ)",
+        f"啊，那个人走了呢... [CQ:at,qq={user_id}]，祝你以后也能开开心心的，记得回来看看哦！",
+        f"总觉得心里空落落的... [CQ:at,qq={user_id}] 已经不在这个群里了。这就是离别的感觉吗？"
+    ]
+    import random
+    msg = random.choice(farewell_msgs)
+    await bot.send_group_msg(group_id=group_id, message=msg)
+
+# --- 好友申请自动同意 ---
+friend_req = on_request(priority=1, block=True)
+
+@friend_req.handle()
+async def _(bot: Bot, event: FriendRequestEvent):
+    global _today_friend_count
+    try:
+        await event.approve(bot)
+        _today_friend_count += 1
+        _save_friend_count()
+        logger.info(f"Bot管理：已自动同意用户 {event.user_id} 的好友申请，今日第 {_today_friend_count} 个")
+    except Exception as e:
+        logger.error(f"Bot管理：自动同意好友申请失败: {e}")
+
+# --- 入群申请处理 ---
+group_req = on_request(priority=1, block=True)
+
+@group_req.handle()
+async def _(bot: Bot, event: GroupRequestEvent):
+    # 仅处理加群申请 (add) 或 邀请 (invite)
+    if event.sub_type not in ["add", "invite"]:
+        return
+
+    # 生成一个简短的 ID
+    req_id = str(len(_pending_group_requests) + 1)
+    _pending_group_requests[req_id] = event
+    
+    # 获取用户信息
+    user_id = event.user_id
+    group_id = event.group_id
+    comment = event.comment or "无"
+    
+    msg = (
+        f"【入群申请】\n"
+        f"编号: {req_id}\n"
+        f"申请人: {user_id}\n"
+        f"说明: {comment}\n"
+        f"请发送 `/同意申请 {req_id}` 批准，或忽略。"
+    )
+    
+    try:
+        await bot.send_group_msg(group_id=group_id, message=msg)
+        logger.info(f"已推送入群申请 {req_id} 到群 {group_id}")
+    except Exception as e:
+        logger.error(f"推送入群申请失败: {e}")
+
+# --- 同意申请指令 ---
+approve_req = on_command("同意申请", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, priority=1, block=True)
+
+@approve_req.handle()
+async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    req_id = args.extract_plain_text().strip()
+    if not req_id:
+        await approve_req.finish("请输入申请编号，例如：/同意申请 1")
+    
+    if req_id not in _pending_group_requests:
+        await approve_req.finish("找不到该编号的申请，可能已过期或不存在。")
+        
+    req_event = _pending_group_requests[req_id]
+    
+    # 校验是否是本群的申请
+    if req_event.group_id != event.group_id:
+        await approve_req.finish("该申请不属于本群。")
+        
+    try:
+        await req_event.approve(bot)
+        del _pending_group_requests[req_id]
+        await approve_req.finish(f"已同意申请 {req_id} (用户 {req_event.user_id})")
+    except FinishedException:
+        raise
+    except Exception as e:
+        await approve_req.finish(f"操作失败: {e}")
+
+# --- 定时任务 ---
+@scheduler.scheduled_job("cron", hour=23, minute=59, id="bot_manager_daily_report")
+async def daily_report():
+    # 1. 好友统计
+    global _today_friend_count
+    # 即使数量为0也推送，确保管理员知道Bot还在运行
+    bots = get_driver().bots.values()
+    msg = f"【每日统计】\n今日新增好友: {_today_friend_count} 人"
+    for bot in bots:
+        for su in superusers:
+            try:
+                await bot.send_private_msg(user_id=int(su), message=msg)
+            except: pass
+    
+    _today_friend_count = 0 # 重置
+    _save_friend_count() # 保存重置后的状态
+
+    # 2. 清空入群申请
+    global _pending_group_requests
+    if _pending_group_requests:
+        count = len(_pending_group_requests)
+        _pending_group_requests.clear()
+        logger.info(f"Bot管理：已自动清空 {count} 条未处理的入群申请")
+
+# --- 群内插件管理 ---
+
+_DISABLED_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "disabled_plugins.json")
+_disabled_plugins_cache = {} # {str(group_id): [plugin_names]}
+
+def _load_disabled_config():
+    global _disabled_plugins_cache
+    if not os.path.exists(os.path.dirname(_DISABLED_CONFIG_PATH)):
+        os.makedirs(os.path.dirname(_DISABLED_CONFIG_PATH), exist_ok=True)
+    
+    if os.path.exists(_DISABLED_CONFIG_PATH):
+        try:
+            with open(_DISABLED_CONFIG_PATH, "r", encoding="utf-8") as f:
+                _disabled_plugins_cache = json.load(f)
+        except Exception as e:
+            logger.error(f"加载插件禁用配置失败: {e}")
+            _disabled_plugins_cache = {}
+    else:
+        _disabled_plugins_cache = {}
+
+def _save_disabled_config():
+    try:
+        with open(_DISABLED_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(_disabled_plugins_cache, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"保存插件禁用配置失败: {e}")
+
+# 初始化加载
+_load_disabled_config()
+
+@run_preprocessor
+async def _(matcher: Matcher, event: GroupMessageEvent):
+    """拦截被禁用的插件"""
+    plugin = matcher.plugin
+    if not plugin:
+        return
+    
+    group_id = str(event.group_id)
+    if group_id in _disabled_plugins_cache:
+        # 检查是否禁用了该插件
+        if plugin.name in _disabled_plugins_cache[group_id] or plugin.module_name in _disabled_plugins_cache[group_id]:
+            # Bot管理插件本身不允许被禁用，否则无法解禁
+            if plugin.name == "Bot管理" or "bot_manager" in plugin.module_name:
+                return
+            
+            raise IgnoredException(f"Plugin {plugin.name} is disabled in group {group_id}")
+
+def _find_plugin(name_or_index: str):
+    """根据名称或序号查找插件"""
+    plugins = get_loaded_plugins()
+    plugins = sorted(list(plugins), key=lambda x: x.module_name)
+    
+    if name_or_index.isdigit():
+        idx = int(name_or_index) - 1
+        if 0 <= idx < len(plugins):
+            return plugins[idx]
+            
+    for p in plugins:
+        p_meta_name = p.metadata.name if p.metadata else ""
+        if name_or_index.lower() in [p.name.lower(), p_meta_name.lower(), p.module_name.lower()]:
+            return p
+    return None
+
+disable_plugin_cmd = on_command("本群禁用", aliases={"禁用插件"}, permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, priority=1, block=True)
+@disable_plugin_cmd.handle()
+async def _(bot: Bot, event: MessageEvent, args: Message = CommandArg()):
+    params = args.extract_plain_text().strip().split()
+    if not params:
+        await disable_plugin_cmd.finish("用法: 禁用插件 [群号] <插件名/序号>")
+    
+    target_group_id = None
+    plugin_str = None
+    
+    # 判断是否指定了群号 (仅限超管)
+    if len(params) >= 2 and params[0].isdigit() and len(params[0]) >= 5:
+        if str(event.user_id) not in superusers:
+            # 如果不是超管，但尝试指定群号，则视为参数错误或无权操作
+            # 这里简单处理：如果不是超管，就把第一个参数当做插件名（虽然很少见纯数字插件名且长度>5）
+            # 或者直接报错
+             await disable_plugin_cmd.finish("权限不足，无法指定其他群号")
+        else:
+            target_group_id = params[0]
+            plugin_str = params[1]
+    else:
+        # 未指定群号，默认当前群
+        if isinstance(event, GroupMessageEvent):
+            target_group_id = str(event.group_id)
+            plugin_str = params[0]
+        else:
+            await disable_plugin_cmd.finish("请指定群号: 禁用插件 <群号> <插件名/序号>")
+
+    # 查找插件
+    target = _find_plugin(plugin_str)
+    if not target:
+        await disable_plugin_cmd.finish(f"找不到插件: {plugin_str}")
+        
+    real_name = target.metadata.name if target.metadata else target.name
+    
+    # 禁止禁用自己
+    if real_name == "Bot管理" or "bot_manager" in target.module_name:
+        await disable_plugin_cmd.finish("无法禁用 Bot管理 插件")
+
+    if target_group_id not in _disabled_plugins_cache:
+        _disabled_plugins_cache[target_group_id] = []
+        
+    if real_name not in _disabled_plugins_cache[target_group_id]:
+        _disabled_plugins_cache[target_group_id].append(real_name)
+        _save_disabled_config()
+        await disable_plugin_cmd.finish(f"已在群 {target_group_id} 禁用插件: {real_name}")
+    else:
+        await disable_plugin_cmd.finish(f"插件 {real_name} 已经在群 {target_group_id} 被禁用了")
+
+enable_plugin_cmd = on_command("本群启用", aliases={"启用插件"}, permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, priority=1, block=True)
+@enable_plugin_cmd.handle()
+async def _(bot: Bot, event: MessageEvent, args: Message = CommandArg()):
+    params = args.extract_plain_text().strip().split()
+    if not params:
+        await enable_plugin_cmd.finish("用法: 启用插件 [群号] <插件名/序号>")
+
+    target_group_id = None
+    plugin_str = None
+
+    if len(params) >= 2 and params[0].isdigit() and len(params[0]) >= 5:
+        if str(event.user_id) not in superusers:
+             await enable_plugin_cmd.finish("权限不足，无法指定其他群号")
+        else:
+            target_group_id = params[0]
+            plugin_str = params[1]
+    else:
+        if isinstance(event, GroupMessageEvent):
+            target_group_id = str(event.group_id)
+            plugin_str = params[0]
+        else:
+            await enable_plugin_cmd.finish("请指定群号: 启用插件 <群号> <插件名/序号>")
+
+    if target_group_id not in _disabled_plugins_cache:
+        await enable_plugin_cmd.finish(f"群 {target_group_id} 没有禁用任何插件")
+        
+    # 查找插件 (为了获取标准名称)
+    target = _find_plugin(plugin_str)
+    found_name = None
+    
+    if target:
+        real_name = target.metadata.name if target.metadata else target.name
+        if real_name in _disabled_plugins_cache[target_group_id]:
+            found_name = real_name
+    
+    # 如果没找到标准插件对象（可能插件已卸载但配置还在），或者标准名称不在禁用列表中
+    # 尝试在禁用列表中模糊搜索
+    if not found_name:
+        disabled_list = _disabled_plugins_cache[target_group_id]
+        if plugin_str in disabled_list:
+             found_name = plugin_str
+        else:
+            for name in disabled_list:
+                if plugin_str.lower() in name.lower():
+                    found_name = name
+                    break
+    
+    if found_name:
+        _disabled_plugins_cache[target_group_id].remove(found_name)
+        if not _disabled_plugins_cache[target_group_id]:
+            del _disabled_plugins_cache[target_group_id]
+        _save_disabled_config()
+        await enable_plugin_cmd.finish(f"已在群 {target_group_id} 启用插件: {found_name}")
+    else:
+        await enable_plugin_cmd.finish(f"在群 {target_group_id} 未找到已禁用的插件: {plugin_str}")
+
+list_disabled_cmd = on_command("本群禁用列表", aliases={"群禁用列表"}, permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, priority=1, block=True)
+@list_disabled_cmd.handle()
+async def _(bot: Bot, event: MessageEvent, args: Message = CommandArg()):
+    target_group_id = None
+    arg_str = args.extract_plain_text().strip()
+    
+    if arg_str and arg_str.isdigit():
+        if str(event.user_id) not in superusers:
+             await list_disabled_cmd.finish("权限不足，无法查看其他群号")
+        target_group_id = arg_str
+    else:
+        if isinstance(event, GroupMessageEvent):
+            target_group_id = str(event.group_id)
+        else:
+            await list_disabled_cmd.finish("请指定群号")
+
+    if target_group_id not in _disabled_plugins_cache or not _disabled_plugins_cache[target_group_id]:
+        await list_disabled_cmd.finish(f"群 {target_group_id} 当前没有禁用任何插件")
+    
+    msg = f"🚫 群 {target_group_id} 已禁用插件:\n" + "\n".join([f"- {name}" for name in _disabled_plugins_cache[target_group_id]])
+    await list_disabled_cmd.finish(msg)
+
+# --- 扩展功能: 账号设置 ---
+set_nickname = on_command("修改昵称", permission=SUPERUSER, priority=5, block=True)
+@set_nickname.handle()
+async def _(bot: Bot, arg: Message = CommandArg()):
+    nickname = arg.extract_plain_text().strip()
+    if not nickname:
+        await set_nickname.finish("请输入要修改的昵称")
+    try:
+        await bot.set_nickname(nickname=nickname)
+        await set_nickname.finish(f"昵称已成功修改为：{nickname}")
+    except ActionFailed as e:
+        await set_nickname.finish(f"修改失败：{str(e)}")
+    except FinishedException:
+        raise
+
+set_face = on_command("修改头像", permission=SUPERUSER, priority=5, block=True)
+@set_face.handle()
+async def _(bot: Bot, arg: Message = CommandArg()):
+    img_url = ""
+    for seg in arg:
+        if seg.type == "image":
+            img_url = seg.data["url"]
+            break
+    if not img_url:
+        text = arg.extract_plain_text().strip()
+        if text.startswith("http"):
+            img_url = text
+    if not img_url:
+        await set_face.finish("请发送图片或提供图片 URL")
+    try:
+        await bot.set_face(file=img_url)
+        await set_face.finish("头像修改指令已提交（可能需要一定时间生效）")
+    except ActionFailed as e:
+        await set_face.finish(f"修改失败：{str(e)}")
+    except FinishedException:
+        raise
+
+# --- 扩展功能: 申请列表与拒绝 ---
+list_req = on_command("申请列表", permission=SUPERUSER, priority=5, block=True)
+@list_req.handle()
+async def _(bot: Bot):
+    if not _pending_group_requests:
+        await list_req.finish("当前没有待处理申请")
+    msg = "待处理申请列表：\n"
+    for req_id, event in _pending_group_requests.items():
+        type_str = "加群" if event.sub_type == "add" else "邀请"
+        msg += f"编号: {req_id} | [{type_str}] 群:{event.group_id} QQ:{event.user_id} | 说明: {event.comment}\n"
+    await list_req.finish(msg.strip())
+
+reject_req = on_command("拒绝申请", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, priority=1, block=True)
+@reject_req.handle()
+async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    req_id = args.extract_plain_text().strip()
+    if not req_id:
+        await reject_req.finish("请输入申请编号，例如：/拒绝申请 1")
+    if req_id not in _pending_group_requests:
+        await reject_req.finish("找不到该编号的申请，可能已过期或不存在。")
+    req_event = _pending_group_requests[req_id]
+    if req_event.group_id != event.group_id:
+        await reject_req.finish("该申请不属于本群。")
+    try:
+        await req_event.approve(bot, approve=False)
+        del _pending_group_requests[req_id]
+        await reject_req.finish(f"已拒绝申请 {req_id} (用户 {req_event.user_id})")
+    except FinishedException:
+        raise
+    except Exception as e:
+        await reject_req.finish(f"操作失败: {e}")
+
+# --- 扩展功能: 群发消息 ---
+send_group_msg_cmd = on_command("发布群消息", aliases={"发送群消息"}, permission=SUPERUSER, priority=5, block=True)
+@send_group_msg_cmd.handle()
+async def _(bot: Bot, arg: Message = CommandArg()):
+    text = arg.extract_plain_text().strip()
+    if not text:
+        await send_group_msg_cmd.finish("格式：/发布群消息 [群号] [内容]")
+    parts = text.split(maxsplit=1)
+    if len(parts) < 2:
+        await send_group_msg_cmd.finish("请输入要发送的内容")
+    group_id_str, content = parts
+    if not group_id_str.isdigit():
+        await send_group_msg_cmd.finish("群号必须为数字")
+    try:
+        await bot.send_group_msg(group_id=int(group_id_str), message=content)
+        await send_group_msg_cmd.finish(f"消息已发送至群 {group_id_str}")
+    except ActionFailed as e:
+        await send_group_msg_cmd.finish(f"发送失败：{str(e)}")
+    except FinishedException:
+        raise
+
+# --- 扩展功能: 空间说说 ---
+def save_cookie_to_env(cookie: str):
+    env_path = ".env.prod"
+    if not os.path.exists(env_path):
+        return
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        new_lines = []
+        found = False
+        for line in lines:
+            if line.strip().startswith("qzone_cookie="):
+                new_lines.append(f'qzone_cookie="{cookie}"\n')
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            new_lines.append(f'\nqzone_cookie="{cookie}"\n')
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        logger.error(f"保存 Cookie 到 .env 失败: {e}")
+
+def get_g_tk(p_skey: str) -> int:
+    hash_val = 5381
+    for char in p_skey:
+        hash_val += (hash_val << 5) + ord(char)
+    return hash_val & 0x7fffffff
+
+async def update_qzone_cookie(bot) -> tuple[bool, str]:
+    """自动获取并刷新 Qzone Cookie，供定时任务调用"""
+    try:
+        cookies_resp = await bot.get_cookies(domain="qzone.qq.com")
+        cookie = cookies_resp.get("cookies")
+        if not cookie:
+            return False, "自动获取 Cookie 失败，返回结果为空"
+        if "p_skey" not in cookie:
+            return False, f"获取到的 Cookie 不完整（缺少 p_skey）"
+        if "uin=" not in cookie:
+            cookie = f"uin=o{bot.self_id}; {cookie}"
+        plugin_config.qzone_cookie = cookie
+        save_cookie_to_env(cookie)
+        return True, cookie
+    except Exception as e:
+        return False, str(e)
+
+async def publish_qzone_shuo(content: str, bot_id: str) -> tuple[bool, str]:
+    cookie = plugin_config.qzone_cookie
+    if not cookie:
+        return False, "未配置 Qzone Cookie"
+    try:
+        content = re.sub(r'\[图片\]|\[表情\]|\[动画表情\]', '', content).strip()
+        if not content:
+            return False, "说说内容不能为空（已过滤图片和表情）"
+        pskey_match = re.search(r"p_skey=([^; ]+)", cookie)
+        if not pskey_match:
+            return False, "Cookie 缺少 p_skey 字段"
+        p_skey = pskey_match.group(1)
+        uin_match = re.search(r"uin=[o0]*(\d+)", cookie)
+        qq = uin_match.group(1) if uin_match else bot_id
+        formatted_cookie = f"uin=o{qq}; p_skey={p_skey};"
+        if "skey=" in cookie:
+            skey_match = re.search(r"skey=([^; ]+)", cookie)
+            if skey_match:
+                formatted_cookie += f" skey={skey_match.group(1)};"
+        g_tk = get_g_tk(p_skey)
+        url = f"https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk={g_tk}"
+        data = {
+            "syn_tweet_version": 1, "paramstr": 1, "pic_template": "", "richtype": "", "richval": "",
+            "special_url": "", "subrichtype": "", "con": content, "feed_tpl_id": "w_v6",
+            "ugc_right": 1, "who": 1, "modifyflag": 0, "hostuin": qq, "format": "json",
+            "qzreferrer": f"https://user.qzone.qq.com/{qq}"
+        }
+        headers = {
+            "Cookie": formatted_cookie,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Referer": f"https://user.qzone.qq.com/{qq}",
+            "Origin": "https://user.qzone.qq.com"
+        }
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(url, data=data, headers=headers)
+            if resp.status_code != 200:
+                return False, f"请求失败，状态码：{resp.status_code}"
+            resp_text = resp.text
+            # 优先检查成功码（部分响应可能被包裹在 HTML/JSONP 中）
+            if '"code":0' in resp_text or '"code": 0' in resp_text:
+                return True, "发布成功"
+            # 再检查是否返回了登录页面
+            resp_lower = resp_text.strip().lower()
+            if resp_lower.startswith("<html") or resp_lower.startswith("<!doctype"):
+                return False, "Qzone 返回了登录页面或验证码，请尝试重新执行 /更新空间Cookie"
+            msg_match = re.search(r'"message":"([^"]+)"', resp_text)
+            err_msg = msg_match.group(1) if msg_match else resp_text[:100]
+            return False, f"发布失败，返回：{err_msg}"
+    except Exception as e:
+        return False, f"发生异常：{str(e)}"
+
+publish_shuo_cmd = on_command("发布说说", aliases={"发说说"}, permission=SUPERUSER, priority=5, block=True)
+@publish_shuo_cmd.handle()
+async def _(bot: Bot, arg: Message = CommandArg()):
+    content = arg.extract_plain_text().strip()
+    if not content:
+        await publish_shuo_cmd.finish("请输入说说内容")
+    if not plugin_config.qzone_cookie:
+        await publish_shuo_cmd.finish("未配置 Qzone Cookie，请先执行 /更新空间Cookie")
+    success, msg = await publish_qzone_shuo(content, bot.self_id)
+    if success:
+        await publish_shuo_cmd.finish("说说发布成功！")
+    else:
+        await publish_shuo_cmd.finish(f"说说发布失败：{msg}")
+
+update_cookie_cmd = on_command("更新空间Cookie", aliases={"获取空间Cookie"}, permission=SUPERUSER, priority=5, block=True)
+@update_cookie_cmd.handle()
+async def _(bot: Bot):
+    try:
+        cookies_resp = await bot.get_cookies(domain="qzone.qq.com")
+        cookie = cookies_resp.get("cookies")
+        if not cookie:
+            await update_cookie_cmd.finish("自动获取 Cookie 失败，返回结果为空。")
+        if "p_skey" not in cookie:
+            await update_cookie_cmd.finish(f"获取到的 Cookie 不完整（缺少 p_skey），请确保机器人已正常登录且环境支持。\n当前获取结果：{cookie[:50]}...")
+        if "uin=" not in cookie:
+            cookie = f"uin=o{bot.self_id}; {cookie}"
+        plugin_config.qzone_cookie = cookie
+        save_cookie_to_env(cookie)
+        await update_cookie_cmd.finish(f"✅ 空间 Cookie 已自动更新并持久化保存！\n当前账号：{bot.self_id}\n你可以尝试发送 /发布说说 了。")
+    except ActionFailed as e:
+        await update_cookie_cmd.finish(f"调用 API 失败：{str(e)}")
+    except FinishedException:
+        raise
+    except Exception as e:
+        await update_cookie_cmd.finish(f"发生异常：{str(e)}")

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import asyncio
 from typing import Dict, List, Optional
@@ -60,7 +61,68 @@ def save_data():
 load_data()
 
 # AI 调用函数
-async def call_ai_persona(messages: List[str]) -> Optional[str]:
+def strip_markdown(text: str) -> str:
+    """去除文本中的 Markdown 格式符号"""
+    text = re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', text, flags=re.DOTALL)
+    text = re.sub(r'_{1,3}(.+?)_{1,3}', r'\1', text, flags=re.DOTALL)
+    text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'~~(.+?)~~', r'\1', text)
+    text = re.sub(r'`{1,3}[^`\n]*`{1,3}', '', text)
+    return text.strip()
+
+
+async def send_persona_as_forward(bot: Bot, event: MessageEvent, target_id: str, persona_text: str, update_time: str):
+    """以转发聊天记录形式发送画像，自动去除 Markdown 符号"""
+    clean_text = strip_markdown(persona_text)
+
+    # 按【xxx】标记分组，每段作为一条转发节点
+    lines = [l.strip() for l in clean_text.splitlines() if l.strip()]
+    grouped: List[str] = []
+    current: List[str] = []
+    for line in lines:
+        if line.startswith("【") and current:
+            grouped.append("\n".join(current))
+            current = [line]
+        else:
+            current.append(line)
+    if current:
+        grouped.append("\n".join(current))
+
+    bot_id = str(bot.self_id)
+    nodes = [
+        {
+            "type": "node",
+            "data": {
+                "name": "画像系统",
+                "uin": bot_id,
+                "content": f"用户 {target_id} 的画像分析\n更新时间：{update_time}",
+            },
+        }
+    ]
+    for section in grouped:
+        if section.strip():
+            nodes.append(
+                {
+                    "type": "node",
+                    "data": {
+                        "name": "画像系统",
+                        "uin": bot_id,
+                        "content": section,
+                    },
+                }
+            )
+
+    try:
+        if isinstance(event, GroupMessageEvent):
+            await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=nodes)
+        else:
+            await bot.call_api("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+    except Exception as e:
+        logger.error(f"用户画像：转发消息发送失败，回退到普通消息: {e}")
+        await bot.send(event, f"用户 {target_id} 的画像分析（{update_time}）：\n\n{clean_text}")
+
+
+async def call_ai_persona(messages: List[str], previous_persona: Optional[str] = None) -> Optional[str]:
     api_key = plugin_config.user_persona_api_key or (person_config.personification_api_key if person_config else None)
     api_url = plugin_config.user_persona_api_url or (person_config.personification_api_url if person_config else "https://api.openai.com/v1")
     model = plugin_config.user_persona_model or (person_config.personification_model if person_config else "gpt-4o-mini")
@@ -72,16 +134,31 @@ async def call_ai_persona(messages: List[str]) -> Optional[str]:
     if not api_url.endswith(("/v1", "/v1/")):
         api_url = api_url.rstrip("/") + "/v1"
 
-    prompt = (
-        "你是一个专业的人格分析师和用户画像专家。\n"
-        "请根据以下用户最近的 30 条聊天记录，分析该用户的特征。\n"
-        "要求输出格式严格如下：\n"
-        "【职业推测】：...\n"
-        "【年龄推测】：...\n"
-        "【性别推测】：...\n"
-        "【人物描述】：（此处要求 150-200 字左右，详细描述性格、语言风格、兴趣爱好等特征）\n\n"
-        "用户聊天记录如下：\n" + "\n".join([f"- {m}" for m in messages])
-    )
+    if previous_persona:
+        prompt = (
+            "你是一个专业的人格分析师和用户画像专家。\n"
+            "该用户此前已有一份画像（见「旧画像」部分）。\n"
+            "请结合旧画像和以下最新聊天记录，对画像进行更新与完善。\n"
+            "以新记录为主要依据；旧画像中若有新记录未涉及的内容，可酌情保留或合并。\n"
+            "要求输出格式严格如下（不使用任何 Markdown 格式符号，不使用 **、# 等）：\n"
+            "【职业推测】：...\n"
+            "【年龄推测】：...\n"
+            "【性别推测】：...\n"
+            "【人物描述】：（此处要求 150-200 字左右，详细描述性格、语言风格、兴趣爱好等特征）\n\n"
+            f"旧画像：\n{previous_persona}\n\n"
+            "最新聊天记录：\n" + "\n".join([f"- {m}" for m in messages])
+        )
+    else:
+        prompt = (
+            "你是一个专业的人格分析师和用户画像专家。\n"
+            "请根据以下用户最近的聊天记录，分析该用户的特征。\n"
+            "要求输出格式严格如下（不使用任何 Markdown 格式符号，不使用 **、# 等）：\n"
+            "【职业推测】：...\n"
+            "【年龄推测】：...\n"
+            "【性别推测】：...\n"
+            "【人物描述】：（此处要求 150-200 字左右，详细描述性格、语言风格、兴趣爱好等特征）\n\n"
+            "用户聊天记录如下：\n" + "\n".join([f"- {m}" for m in messages])
+        )
 
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as http_client:
@@ -136,7 +213,8 @@ async def handle_message(event: MessageEvent):
         save_data()
 
 async def trigger_generation(user_id: str, history: List[str]):
-    persona_text = await call_ai_persona(history)
+    previous_persona = user_data["personas"].get(user_id, {}).get("data")
+    persona_text = await call_ai_persona(history, previous_persona=previous_persona)
     if persona_text:
         user_data["personas"][user_id] = {
             "data": persona_text,
@@ -175,9 +253,9 @@ async def handle_view_persona(bot: Bot, event: MessageEvent, args: Message = Com
     
     persona = user_data["personas"][target_id]
     update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(persona["time"]))
-    
-    msg = f"用户 {target_id} 的画像分析 (更新时间: {update_time})：\n\n{persona['data']}"
-    await view_persona_cmd.finish(msg)
+
+    await send_persona_as_forward(bot, event, target_id, persona["data"], update_time)
+    await view_persona_cmd.finish()
 
 @refresh_persona_cmd.handle()
 async def handle_refresh_persona(bot: Bot, event: MessageEvent, args: Message = CommandArg()):
@@ -201,16 +279,19 @@ async def handle_refresh_persona(bot: Bot, event: MessageEvent, args: Message = 
         await refresh_persona_cmd.finish("当前没有任何聊天记录，无法刷新画像。")
     
     await refresh_persona_cmd.send(f"正在根据当前 {len(history)} 条记录生成画像，请稍候...")
-    
+
     # 强制生成并清空
-    persona_text = await call_ai_persona(history)
+    previous_persona = user_data["personas"].get(target_id, {}).get("data")
+    persona_text = await call_ai_persona(history, previous_persona=previous_persona)
     if persona_text:
+        update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         user_data["personas"][target_id] = {
             "data": persona_text,
             "time": int(time.time())
         }
         user_data["histories"][target_id] = []
         save_data()
-        await refresh_persona_cmd.finish(f"画像刷新成功！\n\n{persona_text}")
+        await send_persona_as_forward(bot, event, target_id, persona_text, update_time)
+        await refresh_persona_cmd.finish()
     else:
         await refresh_persona_cmd.finish("画像刷新失败，请检查 API 配置或网络。")

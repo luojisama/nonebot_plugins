@@ -4,6 +4,7 @@ from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, MessageEvent, Bot, GroupMessageEvent, PrivateMessageEvent
 from nonebot.params import CommandArg
 import uuid
+import random
 
 from .config import Config
 from .models import KeywordRule, MatchType, ReplyType, Reply
@@ -30,26 +31,35 @@ async def handle_keywords(bot: Bot, event: MessageEvent):
 
     rules = load_keywords()
     
+    # 分别收集精确匹配和模糊匹配的规则
+    exact_matches = []
+    fuzzy_matches = []
+    
     for rule in rules:
-        matched = False
         if rule.match_type == MatchType.EXACT:
             if msg in rule.keywords:
-                matched = True
+                exact_matches.append(rule)
         elif rule.match_type == MatchType.FUZZY:
             if any(kw in msg for kw in rule.keywords):
-                matched = True
+                fuzzy_matches.append(rule)
+    
+    # 优先选择精确匹配，如果没有则选择模糊匹配
+    target_rules = exact_matches if exact_matches else fuzzy_matches
+    
+    if target_rules:
+        # 随机选择一个规则进行回复
+        rule = random.choice(target_rules)
         
-        if matched:
-            reply_msg = Message()
-            for reply in rule.replies:
-                if reply.type == ReplyType.TEXT:
-                    reply_msg += MessageSegment.text(reply.data)
-                elif reply.type == ReplyType.IMAGE:
-                    reply_msg += MessageSegment.image(reply.data)
-                elif reply.type == ReplyType.FACE:
-                    reply_msg += MessageSegment.face(int(reply.data))
-            
-            await keywords_matcher.finish(reply_msg)
+        reply_msg = Message()
+        for reply in rule.replies:
+            if reply.type == ReplyType.TEXT:
+                reply_msg += MessageSegment.text(reply.data)
+            elif reply.type == ReplyType.IMAGE:
+                reply_msg += MessageSegment.image(reply.data)
+            elif reply.type == ReplyType.FACE:
+                reply_msg += MessageSegment.face(int(reply.data))
+        
+        await keywords_matcher.finish(reply_msg)
 
 # 管理命令
 add_kw = on_command("添加关键词", priority=5, block=True)

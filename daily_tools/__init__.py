@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 
-from nonebot import on_command, on_message, get_plugin_config, logger
+from nonebot import on_command, get_plugin_config, logger
 from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment, MessageEvent, GroupMessageEvent
 from nonebot.params import CommandArg
 from nonebot.plugin import PluginMetadata
@@ -19,6 +19,8 @@ __plugin_meta__ = PluginMetadata(
     发病 [@某人]: 获取发病文案 (支持@获取对方姓名，不艾特则为自己)
     疯狂星期四: 获取KFC文案
     冷笑话: 讲个冷笑话
+    黄金价格: 获取今日实时金价信息
+    健康分析 <身高cm> <体重kg> <年龄> <性别(男/女)>: 获取身体健康深度分析
     """,
     config=Config,
 )
@@ -96,16 +98,10 @@ async def _():
     await epic_matcher.finish(msg)
 
 # --- 发病 ---
-# 不再强制要求 to_me()
-fabing_matcher = on_message(priority=5, block=False)
+fabing_matcher = on_command("发病", priority=5, block=True)
 
 @fabing_matcher.handle()
 async def _(bot: Bot, event: MessageEvent):
-    content = event.get_plaintext().strip()
-    # 只有当消息中包含“发病”且字数较少时触发（防止误触长难句）
-    if "发病" not in content or len(content) > 15:
-        return
-    
     # 尝试获取被艾特的人的名字
     target_name = None
     if isinstance(event, GroupMessageEvent):
@@ -157,3 +153,78 @@ async def _():
         await joke_matcher.finish("这个笑话太冷了，冻得我打不开接口...")
     
     await joke_matcher.finish(data["data"]["content"])
+
+# --- 黄金价格 ---
+gold_matcher = on_command("黄金价格", aliases={"金价", "今日金价"}, priority=5, block=True)
+
+@gold_matcher.handle()
+async def _():
+    data = await get_api_data("/v2/gold-price")
+    if not data or data.get("code") != 200:
+        await gold_matcher.finish("金子太重了，我现在搬不动数据...")
+    
+    gold_data = data["data"]
+    metals = gold_data.get("metals", [])
+    stores = gold_data.get("stores", [])
+    
+    msg = f"💰 今日黄金价格 ({gold_data['date']})\n"
+    
+    # 提取关键金属价格
+    for metal in metals:
+        if metal["name"] in ["今日金价", "黄金价格"]:
+            msg += f"\n📊 {metal['name']}: {metal['today_price']} {metal['unit']}"
+            msg += f"\n📈 最高: {metal['high_price']} | 📉 最低: {metal['low_price']}"
+            msg += f"\n🕒 更新时间: {metal['updated']}\n"
+            break
+            
+    # 提取主要品牌金价 (取前 5 个)
+    if stores:
+        msg += "\n💍 品牌金价参考："
+        for store in stores[:6]:
+            msg += f"\n🔹 {store['brand']}: {store['price']} {store['unit']}"
+            
+    await gold_matcher.finish(msg)
+
+# --- 身体健康分析 ---
+health_matcher = on_command("健康分析", aliases={"身体健康分析", "健康指数"}, priority=5, block=True)
+
+@health_matcher.handle()
+async def _(args: Message = CommandArg()):
+    # 解析参数: 身高 体重 年龄 性别
+    params = args.extract_plain_text().split()
+    if len(params) < 4:
+        await health_matcher.finish("请提供完整参数哦：健康分析 <身高cm> <体重kg> <年龄> <性别(男/女)>\n示例：健康分析 176 60 24 男")
+    
+    height, weight, age, gender_zh = params[0], params[1], params[2], params[3]
+    gender = "male" if "男" in gender_zh else "female"
+    
+    # 构建请求
+    endpoint = f"/v2/health?height={height}&weight={weight}&age={age}&gender={gender}"
+    
+    # 这里直接使用 get_api_data 可能不够，因为它是 query 参数
+    # get_api_data 内部是拼接 endpoint 的，所以直接传带 query 的 endpoint 也可以
+    data = await get_api_data(endpoint)
+    
+    if not data or data.get("code") != 200:
+        await health_matcher.finish("医生现在不在办公室，请稍后再试吧...")
+        
+    health_data = data["data"]
+    
+    # 构建回复
+    msg = f"🏥 身体健康深度分析报告\n"
+    msg += f"\n👤 基本资料: {height}cm | {weight}kg | {age}岁 | {gender_zh}"
+    msg += f"\n----------------------"
+    
+    # 提取关键指标 (假设接口返回结构包含这些)
+    msg += f"\n⚖️ BMI指数: {health_data.get('bmi', '未知')}"
+    msg += f"\n💡 健康状态: {health_data.get('status', '未知')}"
+    msg += f"\n🌟 理想体重: {health_data.get('ideal_weight', '未知')}"
+    msg += f"\n🔥 基础代谢: {health_data.get('bmr', '未知')}"
+    msg += f"\n📏 建议三围: {health_data.get('suggested_measurements', '未知')}"
+    
+    # 提取健康建议
+    advice = health_data.get("advice")
+    if advice:
+        msg += f"\n\n📝 健康建议：\n{advice}"
+        
+    await health_matcher.finish(msg)

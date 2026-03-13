@@ -1,14 +1,15 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+﻿from pydantic import BaseModel, Field
+
 
 class PluginConfig(BaseModel):
-    daily_waifu_priority: int = 5
-    daily_waifu_limit_per_day: int = 100
-    daily_waifu_cache_path: str = "data/daily_waifu/cache.json"
-    
-class CharacterInfo(BaseModel):
-    name: str
-    source: str
-    image_url: str
-    desc: Optional[str] = None
-    extra: Optional[str] = None
+    """Config for daily_waifu (mudae mode)."""
+
+    daily_waifu_priority: int = Field(default=5)
+    data_path: str = Field(default="data/daily_waifu/mudae_state.json")
+    image_dir: str = Field(default="data/daily_waifu/images")
+    draw_hourly_limit: int = Field(default=5)
+    claim_cooldown: int = Field(default=3600)
+    harem_max_size: int = Field(default=10)
+    custom_images_limit: int = Field(default=5)
+    draw_cooldown: int = Field(default=2)
+    ntr_chance: int = Field(default=10)

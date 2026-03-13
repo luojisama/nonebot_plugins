@@ -1,251 +1,285 @@
-import httpx
-import random
-import asyncio
-import json
+﻿import json
 import os
-from datetime import datetime
-from typing import Optional, Dict
+import time
+from copy import deepcopy
 from pathlib import Path
-from nonebot.log import logger
-from .model import CharacterInfo
+from threading import RLock
+from typing import Any
 
-class WaifuDataSource:
-    def __init__(self, cache_path: str):
-        self.cache_path = Path(cache_path)
-        self.cache: Dict[str, Dict] = {}
-        self._load_cache()
-        
-    def _load_cache(self):
-        if self.cache_path.exists():
-            try:
-                with open(self.cache_path, "r", encoding="utf-8") as f:
-                    self.cache = json.load(f)
-            except Exception as e:
-                logger.error(f"Failed to load waifu cache: {e}")
-                self.cache = {}
-    
-    def _save_cache(self):
+
+DEFAULT_GROUP_STATE: dict[str, Any] = {
+    "config": {},
+    "users": [],
+    "draw_status": {},
+    "last_draw": 0,
+    "last_claim": {},
+    "partners": {},
+    "fav": {},
+    "married_to": {},
+    "wish_list": {},
+    "wished_by": {},
+    "custom_images": {},
+    "harem_heats": {},
+    "draw_messages": {},
+    "exchange_requests": {},
+}
+
+
+class MudaeState:
+    def __init__(self, path: str):
+        self.path = Path(path)
+        self._lock = RLock()
+        self._data: dict[str, Any] = {"groups": {}}
+        self._load()
+
+    def _load(self) -> None:
+        if not self.path.exists():
+            return
         try:
-            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.cache_path, "w", encoding="utf-8") as f:
-                json.dump(self.cache, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save waifu cache: {e}")
+            self._data = json.loads(self.path.read_text(encoding="utf-8"))
+            if "groups" not in self._data or not isinstance(self._data["groups"], dict):
+                self._data = {"groups": {}}
+        except Exception:
+            self._data = {"groups": {}}
 
-    def get_today_waifu(self, user_id: str) -> Optional[CharacterInfo]:
-        today = datetime.now().strftime("%Y-%m-%d")
-        user_cache = self.cache.get(user_id, {})
-        
-        if user_cache.get("date") == today:
-            data = user_cache.get("data")
-            if data:
-                return CharacterInfo(**data)
-        return None
+    def _save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    def save_today_waifu(self, user_id: str, waifu: CharacterInfo):
-        today = datetime.now().strftime("%Y-%m-%d")
-        self.cache[user_id] = {
-            "date": today,
-            "data": waifu.dict()
-        }
-        self._save_cache()
+    def _group(self, gid: str) -> dict[str, Any]:
+        groups = self._data.setdefault("groups", {})
+        if gid not in groups or not isinstance(groups[gid], dict):
+            groups[gid] = deepcopy(DEFAULT_GROUP_STATE)
+        grp = groups[gid]
+        for key, val in DEFAULT_GROUP_STATE.items():
+            if key not in grp:
+                grp[key] = deepcopy(val)
+        return grp
 
-    async def download_image(self, url: str) -> Optional[bytes]:
-        if not url:
-            return None
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Referer": "https://anilist.co/"
-        }
-        
-        async with httpx.AsyncClient(timeout=20, headers=headers) as client:
-            try:
-                resp = await client.get(url)
-                if resp.status_code == 200:
-                    return resp.content
-            except Exception as e:
-                logger.warning(f"Failed to download image {url}: {e}")
-        return None
+    def get_group_cfg(self, gid: str) -> dict[str, Any]:
+        with self._lock:
+            return dict(self._group(gid).get("config", {}))
 
-    async def fetch_waifu(self, tag: str = None) -> Optional[CharacterInfo]:
-        # 尝试多个源
-        # 优先使用 Anilist (因为支持性别过滤)
-        sources = [self._fetch_from_anilist]
-        
-        # 增加重试机制，最多尝试 3 次，每次失败后稍微等待
-        for i in range(3):
-            for source in sources:
-                try:
-                    result = await source(tag)
-                    if result:
-                        return result
-                except Exception as e:
-                    logger.warning(f"Waifu API source failed (attempt {i+1}): {e}")
+    def set_group_cfg(self, gid: str, config: dict[str, Any]) -> None:
+        with self._lock:
+            self._group(gid)["config"] = dict(config)
+            self._save()
+
+    def add_user(self, gid: str, uid: str) -> None:
+        with self._lock:
+            users = self._group(gid)["users"]
+            if uid not in users:
+                users.append(uid)
+                self._save()
+
+    def get_draw_status(self, gid: str, uid: str) -> tuple[str | None, int]:
+        with self._lock:
+            raw = self._group(gid)["draw_status"].get(uid)
+            if not isinstance(raw, dict):
+                return None, 0
+            return raw.get("bucket"), int(raw.get("count", 0))
+
+    def set_draw_status(self, gid: str, uid: str, bucket: str, count: int) -> None:
+        with self._lock:
+            self._group(gid)["draw_status"][uid] = {"bucket": bucket, "count": int(count)}
+            self._save()
+
+    def clear_draw_and_claim_cooldown(self, gid: str, uid: str) -> None:
+        with self._lock:
+            grp = self._group(gid)
+            grp["draw_status"].pop(uid, None)
+            grp["last_claim"].pop(uid, None)
+            self._save()
+
+    def get_last_draw(self, gid: str) -> float:
+        with self._lock:
+            return float(self._group(gid).get("last_draw", 0))
+
+    def set_last_draw(self, gid: str, ts: float) -> None:
+        with self._lock:
+            self._group(gid)["last_draw"] = float(ts)
+            self._save()
+
+    def get_last_claim(self, gid: str, uid: str) -> float:
+        with self._lock:
+            return float(self._group(gid)["last_claim"].get(uid, 0))
+
+    def set_last_claim(self, gid: str, uid: str, ts: float) -> None:
+        with self._lock:
+            self._group(gid)["last_claim"][uid] = float(ts)
+            self._save()
+
+    def get_partners(self, gid: str, uid: str) -> list[str]:
+        with self._lock:
+            lst = self._group(gid)["partners"].get(uid, [])
+            return [str(x) for x in lst]
+
+    def set_partners(self, gid: str, uid: str, partners: list[str]) -> None:
+        with self._lock:
+            self._group(gid)["partners"][uid] = [str(x) for x in partners]
+            self._save()
+
+    def get_fav(self, gid: str, uid: str) -> str | None:
+        with self._lock:
+            fav = self._group(gid)["fav"].get(uid)
+            return str(fav) if fav is not None else None
+
+    def set_fav(self, gid: str, uid: str, cid: str) -> None:
+        with self._lock:
+            self._group(gid)["fav"][uid] = str(cid)
+            self._save()
+
+    def clear_fav(self, gid: str, uid: str) -> None:
+        with self._lock:
+            self._group(gid)["fav"].pop(uid, None)
+            self._save()
+
+    def get_married_to(self, gid: str, cid: str) -> str | None:
+        with self._lock:
+            value = self._group(gid)["married_to"].get(str(cid))
+            return str(value) if value is not None else None
+
+    def set_married_to(self, gid: str, cid: str, uid: str) -> None:
+        with self._lock:
+            self._group(gid)["married_to"][str(cid)] = str(uid)
+            self._save()
+
+    def clear_married_to(self, gid: str, cid: str) -> None:
+        with self._lock:
+            self._group(gid)["married_to"].pop(str(cid), None)
+            self._save()
+
+    def get_wish_list(self, gid: str, uid: str) -> list[str]:
+        with self._lock:
+            lst = self._group(gid)["wish_list"].get(uid, [])
+            return [str(x) for x in lst]
+
+    def set_wish_list(self, gid: str, uid: str, value: list[str]) -> None:
+        with self._lock:
+            self._group(gid)["wish_list"][uid] = [str(x) for x in value]
+            self._save()
+
+    def get_wished_by(self, gid: str, cid: str) -> list[str]:
+        with self._lock:
+            lst = self._group(gid)["wished_by"].get(str(cid), [])
+            return [str(x) for x in lst]
+
+    def set_wished_by(self, gid: str, cid: str, users: list[str]) -> None:
+        with self._lock:
+            if users:
+                self._group(gid)["wished_by"][str(cid)] = [str(x) for x in users]
+            else:
+                self._group(gid)["wished_by"].pop(str(cid), None)
+            self._save()
+
+    def get_custom_images(self, gid: str, cid: str) -> list[str]:
+        with self._lock:
+            lst = self._group(gid)["custom_images"].get(str(cid), [])
+            return [str(x) for x in lst]
+
+    def set_custom_images(self, gid: str, cid: str, paths: list[str]) -> None:
+        with self._lock:
+            if paths:
+                self._group(gid)["custom_images"][str(cid)] = [str(x) for x in paths]
+            else:
+                self._group(gid)["custom_images"].pop(str(cid), None)
+            self._save()
+
+    def set_harem_heat(self, gid: str, uid: str, heat: int) -> None:
+        with self._lock:
+            self._group(gid)["harem_heats"][uid] = int(heat)
+            self._save()
+
+    def get_harem_heats(self, gid: str) -> dict[str, int]:
+        with self._lock:
+            raw = self._group(gid)["harem_heats"]
+            return {str(k): int(v) for k, v in raw.items()}
+
+    def clear_harem_heats(self, gid: str) -> None:
+        with self._lock:
+            self._group(gid)["harem_heats"] = {}
+            self._save()
+
+    def track_draw_message(self, gid: str, msg_id: str, char_id: str, ttl_sec: int) -> None:
+        now = time.time()
+        with self._lock:
+            draw_map = self._group(gid)["draw_messages"]
+            cutoff = now - ttl_sec
+            for mid in list(draw_map.keys()):
+                ts = float(draw_map[mid].get("ts", 0))
+                if ts and ts < cutoff:
+                    draw_map.pop(mid, None)
+            draw_map[str(msg_id)] = {"char_id": str(char_id), "ts": now}
+            self._save()
+
+    def pop_draw_message(self, gid: str, msg_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            draw_map = self._group(gid)["draw_messages"]
+            value = draw_map.pop(str(msg_id), None)
+            self._save()
+            return value
+
+    def get_draw_message(self, gid: str, msg_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            value = self._group(gid)["draw_messages"].get(str(msg_id))
+            return dict(value) if isinstance(value, dict) else None
+
+    def create_exchange_request(self, gid: str, msg_id: str, payload: dict[str, str], ttl_sec: int) -> None:
+        now = time.time()
+        with self._lock:
+            reqs = self._group(gid)["exchange_requests"]
+            cutoff = now - ttl_sec
+            for mid in list(reqs.keys()):
+                ts = float(reqs[mid].get("ts", 0))
+                if ts and ts < cutoff:
+                    reqs.pop(mid, None)
+            reqs[str(msg_id)] = {**payload, "ts": now}
+            self._save()
+
+    def pop_exchange_request(self, gid: str, msg_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            reqs = self._group(gid)["exchange_requests"]
+            value = reqs.pop(str(msg_id), None)
+            self._save()
+            return value
+
+    def get_exchange_request(self, gid: str, msg_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            value = self._group(gid)["exchange_requests"].get(str(msg_id))
+            return dict(value) if isinstance(value, dict) else None
+
+    def get_all_users(self, gid: str) -> list[str]:
+        with self._lock:
+            return [str(x) for x in self._group(gid).get("users", [])]
+
+    def cleanup_user_harem_keep_fav(self, gid: str, uid: str) -> tuple[list[str], str | None]:
+        with self._lock:
+            grp = self._group(gid)
+            fav = grp["fav"].get(uid)
+            partners = [str(x) for x in grp["partners"].get(uid, [])]
+            for cid in partners:
+                if fav is not None and str(cid) == str(fav):
                     continue
-            if i < 2:
-                await asyncio.sleep(1)
-                
-        return None
+                grp["married_to"].pop(str(cid), None)
+            if fav is None or str(fav) not in partners:
+                grp["partners"].pop(uid, None)
+                grp["fav"].pop(uid, None)
+                kept = []
+                kept_fav = None
+            else:
+                grp["partners"][uid] = [str(fav)]
+                kept = [str(fav)]
+                kept_fav = str(fav)
+            self._save()
+            return kept, kept_fav
 
-    async def _fetch_from_jikan(self, tag: str = None) -> Optional[CharacterInfo]:
-        # Jikan (MyAnimeList) API
-        # 注意：Jikan 的 Random 接口不支持 tag，这里忽略 tag
-        url = "https://api.jikan.moe/v4/random/characters"
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(url)
-            if resp.status_code == 200:
-                data = resp.json().get("data", {})
-                
-                # 获取高清图
-                images = data.get("images", {}).get("jpg", {})
-                img_url = images.get("image_url", "")
-                
-                # 尝试获取作品信息 (Jikan Random Character 可能不直接返回作品，需要额外查询或解析)
-                # 但 V4 Random 接口返回的数据中通常包含 "anime" 或 "manga" 列表
-                # 不过 random/characters 现在的返回值结构里可能没有 anime 列表，只有关于角色的基本信息
-                # 我们做个简单的检查
-                
-                source_name = "未知作品"
-                # 实际上 Jikan V4 random/characters 返回数据确实不含 anime 关联信息
-                # 所以我们可能需要换一个 API 或者接受“未知作品”
-                # 为了质量，我们尝试用 search 接口 + 随机页数来模拟
-                
-                # 策略 B: Jikan Search
-                # 如果有 tag (比如 "萝莉" -> search "loli" ? 不靠谱)
-                # 让我们回退到使用 Anilist 作为主要带作品信息的源，Jikan 作为备用
-                pass
 
-                return CharacterInfo(
-                    name=data.get("name", "未知角色") + f" ({data.get('name_kanji', '')})",
-                    source=source_name, # Jikan Random Character 确实缺这个
-                    image_url=img_url,
-                    desc=data.get("about", "")[:100] + "..." if data.get("about") else "暂无介绍"
-                )
-        return None
+def ensure_dir(path: str) -> None:
+    Path(path).mkdir(parents=True, exist_ok=True)
 
-    def _clean_description(self, desc: str) -> str:
-        import re
-        if not desc:
-            return ""
-        
-        # 移除 HTML 标签
-        desc = re.sub(r'<[^>]+>', '', desc)
-        
-        # 移除 Markdown 格式
-        desc = desc.replace("__", "").replace("**", "")
-        
-        # 移除特定不想看到的内容 (如 Tokyo Ghoul 的 Quinque 介绍)
-        # 移除以 "Quinque:" 开头的段落或句子直到行尾或特定结束符
-        # 这里简单移除包含 "Quinque:" 的行
-        lines = desc.split('\n')
-        filtered_lines = []
-        for line in lines:
-            if "Quinque:" in line or "(Koukaku)" in line or "(Ukaku)" in line:
-                continue
-            # 移除类似 "Kishou Arima is a..." 这种可能的开场白，如果是用户特别反感的
-            if "Kishou Arima is a" in line:
-                continue
-            filtered_lines.append(line)
-        desc = '\n'.join(filtered_lines)
-        
-        # 移除剧透标记
-        desc = re.sub(r'~!.*?~!|\|\|.*?\|\|', '', desc)
-        
-        # 压缩多余换行
-        desc = re.sub(r'\n\s*\n', '\n', desc).strip()
-        
-        return desc[:100] + "..." if len(desc) > 100 else desc
 
-    async def _fetch_from_anilist(self, tag: str = None) -> Optional[CharacterInfo]:
-        # Anilist GraphQL
-        url = "https://graphql.anilist.co"
-        
-        # 随机页码 (1-1000)
-        page = random.randint(1, 1000)
-        
-        query = """
-        query ($page: Int) {
-            Page(page: $page, perPage: 30) {
-                characters(sort: FAVOURITES_DESC) {
-                    name {
-                        full
-                        native
-                    }
-                    gender
-                    image {
-                        large
-                    }
-                    description
-                    dateOfBirth {
-                        month
-                        day
-                    }
-                    media(sort: FAVOURITES_DESC, perPage: 1) {
-                        nodes {
-                            title {
-                                romaji
-                                native
-                                english
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        """
-        
-        variables = {"page": page}
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-        
-        async with httpx.AsyncClient(timeout=20, headers=headers) as client:
-            try:
-                resp = await client.post(url, json={"query": query, "variables": variables})
-                if resp.status_code == 200:
-                    data = resp.json()
-                    char_list = data.get("data", {}).get("Page", {}).get("characters", [])
-                    
-                    # 客户端过滤性别
-                    female_chars = [c for c in char_list if c.get("gender") == "Female"]
-                    
-                    if female_chars:
-                        char = random.choice(female_chars)
-                        
-                        # 名字
-                        name = char["name"]["full"]
-                        if char["name"]["native"]:
-                            name += f" ({char['name']['native']})"
-                            
-                        # 作品
-                        source = "未知作品"
-                        media_nodes = char.get("media", {}).get("nodes", [])
-                        if media_nodes:
-                            media = media_nodes[0]
-                            source = media["title"].get("native") or media["title"].get("english") or media["title"].get("romaji")
-                            
-                        # 描述
-                        desc = self._clean_description(char.get("description", ""))
-                            
-                        # 生日
-                        dob = char.get("dateOfBirth", {})
-                        extra = ""
-                        if dob.get("month") and dob.get("day"):
-                            extra = f"🎂 生日: {dob['month']}月{dob['day']}日"
-                            
-                        return CharacterInfo(
-                            name=name,
-                            source=source,
-                            image_url=char["image"]["large"],
-                            desc=desc,
-                            extra=extra
-                        )
-                else:
-                    logger.warning(f"Anilist API returned error {resp.status_code}: {resp.text}")
-            except Exception as e:
-                logger.warning(f"Anilist API request failed: {e}")
-        return None
+def safe_remove(path: str) -> None:
+    try:
+        os.remove(path)
+    except Exception:
+        pass

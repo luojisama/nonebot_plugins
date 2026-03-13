@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "4d6a0754-2bae-4b1e-9289-e7aad84fead8",
+    "keywords": [
+      "赞助"
+    ],
+    "match_type": "exact",
+    "replies": [
+      {
+        "type": "text",
+        "data": "欢迎赞助喵，谢谢打赏喵"
+      },
+      {
+        "type": "image",
+        "data": "https://multimedia.nt.qq.com.cn/download?appid=1407&fileid=EhQUYbu3-EJl9rI2-_4_crdwPZDRWBi6wgsg_woo4f7P4avUkgMyBHByb2RQgL2jAVoQ7sC2_R6Vk4TlwNKsggT8w3oCN7eCAQJneg&rkey=CAQSMADmGwHsFMeMCy3euA8XWpOuQoelW4CRvwLy-9hsWyrl-vB3Xfg4WoO5K17oMMS7pA"
+      }
+    ]
+  }
+]

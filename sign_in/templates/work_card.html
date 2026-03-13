@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            font-family: 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 600px;
+            width: 500px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #87ceeb; /* 天蓝色边框 (真寻运动衫颜色) */
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(135, 206, 235, 0.3);
+            width: 440px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+
+        .card::before {
+            content: '🎮';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        .card::after {
+            content: '💻';
+            position: absolute;
+            bottom: -10px;
+            left: -10px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            color: #4682b4; /* 钢蓝色 */
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f0f8ff; /* 爱丽丝蓝 */
+            border-radius: 15px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #87ceeb;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-size: 20px;
+            color: #4682b4;
+            font-weight: bold;
+        }
+
+        .work-result {
+            background: #fffafa;
+            border: 1px dashed #87ceeb;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .work-desc {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .coin-gain {
+            font-size: 24px;
+            color: #ffa500; /* 橙色 */
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: space-between;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #e0ffff;
+            text-align: center;
+            flex: 1 1 calc(50% - 10px);
+            min-width: 120px;
+            box-sizing: border-box;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            color: #4682b4;
+            font-weight: bold;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #87ceeb, #4682b4);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .footer-time {
+            text-align: center;
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1 class="title">打工结束</h1>
+        </div>
+        
+        <div class="user-info">
+            <img class="user-avatar" src="{avatar_url}" alt="avatar">
+            <div class="user-name">{user_name}</div>
+        </div>
+
+        <div class="work-result">
+            <div class="work-desc">{work_desc}</div>
+            <div class="coin-gain">+{earned_coins} 金币</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">当前金币</div>
+                <div class="stat-value">{coins}</div>
+                <div class="level-badge">{coin_level_name}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">剩余打工次数</div>
+                <div class="stat-value">{remaining_works}</div>
+                <div class="level-badge">{work_status}</div>
+            </div>
+        </div>
+        
+        <div class="footer-time">
+            {sign_time}
+        </div>
+    </div>
+</body>
+</html>
